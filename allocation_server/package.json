@@ -1,0 +1,9 @@
+{
+  "name": "allocation-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "幼儿园食材配送 · 微信云开发后端（云函数）",
+  "scripts": {
+    "check": "node --check cloudfunctions/api/index.js && node --check cloudfunctions/api/common.js && node --check cloudfunctions/initDb/index.js && node --check cloudfunctions/initDb/seeds.js"
+  }
+}
