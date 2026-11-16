@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>商品与报价 · 鲜达配送管理</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="products">
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">鲜</div>
+      <div>
+        <div class="logo-name">鲜达配送</div>
+        <div class="logo-sub">幼儿园食材管理</div>
+      </div>
+    </div>
+    <div class="nav-group">日常业务</div>
+    <nav class="nav">
+      <a href="index.html" data-page="index"><span class="ico">◫</span>工作台</a>
+      <a href="order.html" data-page="order"><span class="ico">＋</span>下单</a>
+      <a href="summary.html" data-page="summary"><span class="ico">≡</span>每日汇总</a>
+      <a href="delivery.html" data-page="delivery"><span class="ico">⇥</span>配送签收</a>
+      <a href="bill.html" data-page="bill"><span class="ico">¥</span>月结对账</a>
+    </nav>
+    <div class="nav-group">基础资料</div>
+    <nav class="nav">
+      <a href="gardens.html" data-page="gardens"><span class="ico">园</span>幼儿园档案</a>
+      <a href="products.html" data-page="products"><span class="ico">◇</span>商品与报价</a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <h1>商品与报价</h1>
+      <div class="meta">
+        <span id="today"></span>
+        <span class="badge brand">报价 11月16日 生效</span>
+        <div class="avatar">王</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h2>商品库</h2>
+          <p>蔬菜瓜果、辅食、肉禽蛋统一在这里维护。报价按生效日期保存，历史订单不受改价影响。</p>
+        </div>
+        <div class="row">
+          <button class="btn" onclick="toast('已导入今日市场报价（原型演示）')">导入今日报价</button>
+          <button class="btn btn-primary" onclick="toast('新建商品（原型演示）')">＋ 新建商品</button>
+        </div>
+      </div>
+
+      <div class="grid grid-3" style="margin-bottom:16px">
+        <div class="card kpi"><div class="label">在售商品</div><div class="value">46 <small>个</small></div><div class="delta">蔬菜 28 · 水果 8 · 辅食 6 · 其他 4</div></div>
+        <div class="card kpi"><div class="label">今日涨价</div><div class="value">7 <small>个</small></div><div class="delta">叶菜类涨幅最大</div></div>
+        <div class="card kpi focus"><div class="label">今日降价的品</div><div class="value">3 <small>个</small></div><div class="delta">可在下单页自动生效</div></div>
+      </div>
+
+      <div class="card">
+        <div class="tabs">
+          <button class="active" data-cat="all">全部</button>
+          <button data-cat="veg">蔬菜瓜果</button>
+          <button data-cat="baby">辅食</button>
+          <button data-cat="meat">肉禽蛋</button>
+          <button data-cat="other">干货其他</button>
+        </div>
+        <div class="sub-bar">
+          <input type="text" id="search" placeholder="搜索商品名称" style="width:240px">
+          <span class="note">单位换算示例：土豆 1 箱 = 40 斤；鸡蛋 1 箱 = 30 斤</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>商品</th><th>分类</th><th>规格 / 换算</th>
+              <th class="num">今日单价</th><th class="num">昨日</th><th class="num">涨跌</th>
+              <th>状态</th><th class="num">操作</th>
+            </tr>
+          </thead>
+          <tbody id="prodBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="priceModal">
+  <div class="modal" style="width:420px">
+    <div class="modal-head">
+      <h3 id="pmTitle">修改今日报价</h3>
+      <button class="close-x" onclick="closeModal('priceModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="note" style="margin-bottom:10px">新价格从今天起生效，之前的订单一律按当时锁定的价格结算。</div>
+      <div class="row">
+        <span id="pmName" class="t-main"></span>
+        <input type="number" id="pmPrice" step="0.1" style="width:120px"> <span class="note">元 / 斤</span>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('priceModal')">取消</button>
+      <button class="btn btn-primary" id="pmSave">保存并生效</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+var PRODUCTS = [
+  { name: '土豆', cat: 'veg', catName: '蔬菜瓜果', spec: '本地中号 · 1 箱 = 40 斤', price: 3.20, prev: 3.00, on: true },
+  { name: '西红柿', cat: 'veg', catName: '蔬菜瓜果', spec: '大棚中果 · 1 箱 = 30 斤', price: 5.60, prev: 5.80, on: true },
+  { name: '上海青', cat: 'veg', catName: '蔬菜瓜果', spec: '本地新鲜 · 1 筐 = 20 斤', price: 4.20, prev: 3.60, on: true },
+  { name: '胡萝卜', cat: 'veg', catName: '蔬菜瓜果', spec: '本地中号 · 1 箱 = 35 斤', price: 3.80, prev: 3.80, on: true },
+  { name: '苹果', cat: 'veg', catName: '蔬菜瓜果', spec: '红富士 80# · 1 箱 = 40 斤', price: 6.50, prev: 6.20, on: true },
+  { name: '香蕉', cat: 'veg', catName: '蔬菜瓜果', spec: '进口中把 · 1 箱 = 25 斤', price: 4.80, prev: 5.00, on: true },
+  { name: '婴儿米粉', cat: 'baby', catName: '辅食', spec: '原味 400g · 1 箱 = 12 袋', price: 28.00, prev: 28.00, on: true },
+  { name: '宝宝面条', cat: 'baby', catName: '辅食', spec: '无盐 200g · 1 箱 = 20 袋', price: 16.50, prev: 16.50, on: true },
+  { name: '鸡蛋', cat: 'meat', catName: '肉禽蛋', spec: '土鸡蛋 · 1 箱 = 30 斤', price: 12.00, prev: 11.40, on: true },
+  { name: '鸡胸肉', cat: 'meat', catName: '肉禽蛋', spec: '冷鲜真空 · 1 箱 = 20 斤', price: 15.00, prev: 15.00, on: true },
+  { name: '猪肝', cat: 'meat', catName: '肉禽蛋', spec: '当日冷鲜 · 1 箱 = 10 斤', price: 18.00, prev: 19.50, on: true },
+  { name: '木耳', cat: 'other', catName: '干货其他', spec: '东北秋耳 · 1 袋 = 5 斤', price: 42.00, prev: 42.00, on: false }
+];
+
+var activeCat = 'all';
+var editIndex = -1;
+
+function render() {
+  var kw = document.getElementById('search').value.trim();
+  var rows = PRODUCTS.map(function (p, i) {
+    return { p: p, i: i };
+  }).filter(function (x) {
+    if (activeCat !== 'all' && x.p.cat !== activeCat) return false;
+    if (kw && x.p.name.indexOf(kw) < 0) return false;
+    return true;
+  });
+
+  document.getElementById('prodBody').innerHTML = rows.map(function (x) {
+    var p = x.p;
+    var d = p.price - p.prev;
+    var pct = p.prev ? (d / p.prev * 100) : 0;
+    var trend = d === 0
+      ? '<span class="note">—</span>'
+      : '<span class="badge ' + (d > 0 ? 'red' : 'green') + '">' + (d > 0 ? '↑' : '↓') + Math.abs(pct).toFixed(1) + '%</span>';
+    return '<tr>' +
+      '<td class="t-main">' + p.name + '</td>' +
+      '<td class="t-sub">' + p.catName + '</td>' +
+      '<td class="t-sub">' + p.spec + '</td>' +
+      '<td class="num t-main">' + p.price.toFixed(2) + '</td>' +
+      '<td class="num note">' + p.prev.toFixed(2) + '</td>' +
+      '<td class="num">' + trend + '</td>' +
+      '<td>' + (p.on ? '<span class="badge green">在售</span>' : '<span class="badge">已停售</span>') + '</td>' +
+      '<td class="num"><button class="btn btn-sm" data-act="price" data-i="' + x.i + '">改价</button> ' +
+        '<button class="btn btn-sm" data-act="toggle" data-i="' + x.i + '">' + (p.on ? '停售' : '上架') + '</button></td>' +
+    '</tr>';
+  }).join('');
+}
+
+document.getElementById('prodBody').addEventListener('click', function (e) {
+  var btn = e.target.closest('button[data-act]');
+  if (!btn) return;
+  var i = parseInt(btn.dataset.i, 10);
+  var p = PRODUCTS[i];
+  if (btn.dataset.act === 'toggle') {
+    p.on = !p.on;
+    render();
+    toast(p.name + (p.on ? ' 已上架' : ' 已停售'));
+    return;
+  }
+  editIndex = i;
+  document.getElementById('pmTitle').textContent = '修改报价 · ' + p.name;
+  document.getElementById('pmName').textContent = p.name;
+  document.getElementById('pmPrice').value = p.price.toFixed(1);
+  openModal('priceModal');
+});
+
+document.getElementById('pmSave').addEventListener('click', function () {
+  var v = parseFloat(document.getElementById('pmPrice').value);
+  if (!v || v <= 0) { toast('请输入有效价格'); return; }
+  var p = PRODUCTS[editIndex];
+  p.prev = p.price;
+  p.price = v;
+  closeModal('priceModal');
+  render();
+  toast(p.name + ' 新报价 ' + v.toFixed(2) + ' 元已生效');
+});
+
+document.getElementById('search').addEventListener('input', render);
+
+document.querySelectorAll('.tabs button').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('.tabs button').forEach(function (b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    activeCat = btn.dataset.cat;
+    render();
+  });
+});
+
+render();
+</script>
+</body>
+</html>

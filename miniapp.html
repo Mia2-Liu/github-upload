@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>幼儿园端 · 鲜达配送小程序原型</title>
+<link rel="stylesheet" href="assets/miniapp.css">
+</head>
+<body class="mp-body">
+  <div class="mp-phone">
+    <div class="mp-status">
+      <span>9:41</span>
+      <span class="right">●●● 5G ▮</span>
+    </div>
+
+    <div class="mp-nav">
+      <h1 id="navTitle">鲜达配送</h1>
+      <div class="mp-capsule"><span>···</span><i></i><span>◉</span></div>
+    </div>
+
+    <div class="mp-view" id="view"></div>
+
+    <div class="mp-cartbar" id="cartbar" style="display:none">
+      <div>
+        <div class="sum" id="cartSum">还没选菜</div>
+        <div class="amt" id="cartAmt">¥0.00</div>
+      </div>
+      <button id="cartGo" disabled>去结算</button>
+    </div>
+
+    <nav class="mp-tabbar">
+      <button data-tab="home"><span class="ti">⌂</span>首页</button>
+      <button data-tab="order"><span class="ti">＋</span>下单</button>
+      <button data-tab="orders"><span class="ti">☰</span>订单</button>
+      <button data-tab="mine"><span class="ti">☺</span>我的</button>
+    </nav>
+
+    <div class="sheet-mask" id="sheetMask">
+      <div class="sheet" id="sheet"></div>
+    </div>
+
+    <div class="mp-toast" id="mpToast"></div>
+
+    <div class="mp-login" id="login">
+      <div class="login-top">
+        <div class="login-logo">鲜</div>
+        <div class="login-name">鲜达配送</div>
+        <div class="login-desc">幼儿园食材下单 · 每天 07:30 前送达</div>
+      </div>
+
+      <div id="loginMain">
+        <button class="login-wx" data-act="wx-phone">微信授权手机号登录</button>
+        <div class="login-mid">李老师 138 0000 1234</div>
+        <div class="login-or"><span>或</span></div>
+        <button class="login-alt" data-act="to-bind">我是新老师，申请绑定园所</button>
+        <div class="login-note">登录时只获取手机号，系统比对配送方登记的白名单，直接进入对应幼儿园，不需要输入邀请码。</div>
+      </div>
+
+      <div id="loginBind" style="display:none">
+        <div class="login-title">申请绑定园所</div>
+        <div class="login-sub">园所码由业务员提供，提交后等业务员确认</div>
+        <input class="login-input" id="bindCode" type="text" maxlength="8" placeholder="园所码，如 GD-0008">
+        <input class="login-input" id="bindPhone" type="tel" maxlength="13" placeholder="你的手机号">
+        <button class="login-wx" data-act="apply-bind">提交申请</button>
+        <button class="login-back" data-act="back-main">返回登录</button>
+      </div>
+
+      <div id="loginPending" style="display:none">
+        <div class="login-pending">⏳</div>
+        <div class="login-title">申请已提交</div>
+        <div class="login-sub">业务员确认后即可下单，通常 10 分钟内完成<br>确认后无需再次授权，直接进入本园</div>
+        <button class="login-back" data-act="back-main">返回登录</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/miniapp.js"></script>
+</body>
+</html>

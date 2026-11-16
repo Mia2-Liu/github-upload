@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>每日汇总 · 鲜达配送管理</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="summary">
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">鲜</div>
+      <div>
+        <div class="logo-name">鲜达配送</div>
+        <div class="logo-sub">幼儿园食材管理</div>
+      </div>
+    </div>
+    <div class="nav-group">日常业务</div>
+    <nav class="nav">
+      <a href="index.html" data-page="index"><span class="ico">◫</span>工作台</a>
+      <a href="order.html" data-page="order"><span class="ico">＋</span>下单</a>
+      <a href="summary.html" data-page="summary"><span class="ico">≡</span>每日汇总</a>
+      <a href="delivery.html" data-page="delivery"><span class="ico">⇥</span>配送签收</a>
+      <a href="bill.html" data-page="bill"><span class="ico">¥</span>月结对账</a>
+    </nav>
+    <div class="nav-group">基础资料</div>
+    <nav class="nav">
+      <a href="gardens.html" data-page="gardens"><span class="ico">园</span>幼儿园档案</a>
+      <a href="products.html" data-page="products"><span class="ico">◇</span>商品与报价</a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <h1>每日汇总</h1>
+      <div class="meta">
+        <span id="today"></span>
+        <span class="badge brand">11月17日 配送日</span>
+        <div class="avatar">王</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h2>11月17日 汇总单</h2>
+          <p>8 家园所、46 张明细、汇总金额 ¥12,840.00。按商品给采购，按园给分拣配送。</p>
+        </div>
+        <div class="row no-print">
+          <button class="btn" onclick="window.print()">打印</button>
+          <button class="btn" onclick="toast('已导出 Excel（原型演示）')">导出 Excel</button>
+          <button class="btn btn-primary" onclick="toast('已生成 8 张分拣单')">生成分拣单</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="tabs no-print">
+          <button class="active" data-tab="byProduct">按商品汇总（采购用）</button>
+          <button data-tab="byGarden">按园汇总（分拣配送用）</button>
+        </div>
+
+        <div id="byProduct">
+          <div class="sub-bar">
+            <span class="note">同一张汇总单，两个口径，不用再拿计算器加一遍</span>
+            <span class="badge green">已同步今日报价</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>商品</th><th>单位</th><th class="num">总需求</th><th>分园明细</th><th class="num">采购状态</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="t-main">土豆</td><td class="t-sub">斤</td><td class="num t-main">86</td>
+                <td class="t-sub">阳光 30 · 蓝天 26 · 小太阳 30</td><td class="num"><span class="badge green">已备货</span></td>
+              </tr>
+              <tr>
+                <td class="t-main">西红柿</td><td class="t-sub">斤</td><td class="num t-main">62</td>
+                <td class="t-sub">阳光 20 · 蓝天 18 · 星光 24</td><td class="num"><span class="badge green">已备货</span></td>
+              </tr>
+              <tr>
+                <td class="t-main">上海青</td><td class="t-sub">斤</td><td class="num t-main">55</td>
+                <td class="t-sub">阳光 15 · 新苗 10 · 小太阳 30</td><td class="num"><span class="badge amber">待补 5</span></td>
+              </tr>
+              <tr>
+                <td class="t-main">胡萝卜</td><td class="t-sub">斤</td><td class="num t-main">48</td>
+                <td class="t-sub">阳光 12 · 蓝天 16 · 星光 20</td><td class="num"><span class="badge green">已备货</span></td>
+              </tr>
+              <tr>
+                <td class="t-main">苹果</td><td class="t-sub">斤</td><td class="num t-main">95</td>
+                <td class="t-sub">阳光 25 · 蓝天 20 · 小太阳 25 · 新苗 25</td><td class="num"><span class="badge green">已备货</span></td>
+              </tr>
+              <tr>
+                <td class="t-main">香蕉</td><td class="t-sub">斤</td><td class="num t-main">72</td>
+                <td class="t-sub">阳光 18 · 蓝天 22 · 星光 32</td><td class="num"><span class="badge green">已备货</span></td>
+              </tr>
+              <tr>
+                <td class="t-main">鸡蛋</td><td class="t-sub">斤</td><td class="num t-main">60</td>
+                <td class="t-sub">阳光 10 · 蓝天 12 · 小太阳 20 · 星光 18</td><td class="num"><span class="badge green">已备货</span></td>
+              </tr>
+              <tr>
+                <td class="t-main">鸡胸肉</td><td class="t-sub">斤</td><td class="num t-main">32</td>
+                <td class="t-sub">阳光 8 · 蓝天 8 · 星光 16</td><td class="num"><span class="badge amber">待采购</span></td>
+              </tr>
+              <tr>
+                <td class="t-main">婴儿米粉</td><td class="t-sub">袋</td><td class="num t-main">24</td>
+                <td class="t-sub">小太阳 6 · 新苗 12 · 星光 6</td><td class="num"><span class="badge green">有库存</span></td>
+              </tr>
+              <tr>
+                <td class="t-main">猪肝</td><td class="t-sub">斤</td><td class="num t-main">14</td>
+                <td class="t-sub">阳光 4 · 蓝天 6 · 小太阳 4</td><td class="num"><span class="badge amber">待采购</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="byGarden" style="display:none">
+          <div class="sub-bar">
+            <span class="note">按园打印分拣单，一园一张，分完打勾</span>
+            <span class="badge">A 线 3 家 · B 线 3 家 · C 线 2 家</span>
+          </div>
+          <table>
+            <thead>
+              <tr><th>幼儿园</th><th>线路</th><th class="num">品项</th><th class="num">金额</th><th>状态</th><th class="num"></th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="t-main">阳光幼儿园</td><td class="t-sub">A 线 · 06:00</td><td class="num">14</td><td class="num">2,180.00</td><td><span class="badge amber">待分拣</span></td><td class="num"><a class="btn btn-sm" href="delivery.html">看分拣单</a></td></tr>
+              <tr><td class="t-main">蓝天幼儿园</td><td class="t-sub">A 线 · 06:20</td><td class="num">11</td><td class="num">1,640.00</td><td><span class="badge amber">待分拣</span></td><td class="num"><a class="btn btn-sm" href="delivery.html">看分拣单</a></td></tr>
+              <tr><td class="t-main">小太阳幼儿园</td><td class="t-sub">A 线 · 06:40</td><td class="num">9</td><td class="num">980.00</td><td><span class="badge">配送中</span></td><td class="num"><a class="btn btn-sm" href="delivery.html">看分拣单</a></td></tr>
+              <tr><td class="t-main">星光幼儿园</td><td class="t-sub">B 线 · 06:10</td><td class="num">16</td><td class="num">2,050.00</td><td><span class="badge amber">待分拣</span></td><td class="num"><a class="btn btn-sm" href="delivery.html">看分拣单</a></td></tr>
+              <tr><td class="t-main">新苗幼儿园</td><td class="t-sub">B 线 · 06:30</td><td class="num">7</td><td class="num">760.00</td><td><span class="badge green">已分拣</span></td><td class="num"><a class="btn btn-sm" href="delivery.html">看分拣单</a></td></tr>
+              <tr><td class="t-main">育才幼儿园</td><td class="t-sub">B 线 · 06:50</td><td class="num">12</td><td class="num">1,520.00</td><td><span class="badge green">已分拣</span></td><td class="num"><a class="btn btn-sm" href="delivery.html">看分拣单</a></td></tr>
+              <tr><td class="t-main">童星幼儿园</td><td class="t-sub">C 线 · 07:00</td><td class="num">10</td><td class="num">1,280.00</td><td><span class="badge green">已分拣</span></td><td class="num"><a class="btn btn-sm" href="delivery.html">看分拣单</a></td></tr>
+              <tr><td class="t-main">金太阳幼儿园</td><td class="t-sub">C 线 · 07:20</td><td class="num">13</td><td class="num">2,430.00</td><td><span class="badge amber">待分拣</span></td><td class="num"><a class="btn btn-sm" href="delivery.html">看分拣单</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+document.querySelectorAll('.tabs button').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('.tabs button').forEach(function (b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('byProduct').style.display = btn.dataset.tab === 'byProduct' ? '' : 'none';
+    document.getElementById('byGarden').style.display = btn.dataset.tab === 'byGarden' ? '' : 'none';
+  });
+});
+</script>
+</body>
+</html>

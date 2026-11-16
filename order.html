@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>下单 · 鲜达配送管理</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="order">
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">鲜</div>
+      <div>
+        <div class="logo-name">鲜达配送</div>
+        <div class="logo-sub">幼儿园食材管理</div>
+      </div>
+    </div>
+    <div class="nav-group">日常业务</div>
+    <nav class="nav">
+      <a href="index.html" data-page="index"><span class="ico">◫</span>工作台</a>
+      <a href="order.html" data-page="order"><span class="ico">＋</span>下单</a>
+      <a href="summary.html" data-page="summary"><span class="ico">≡</span>每日汇总</a>
+      <a href="delivery.html" data-page="delivery"><span class="ico">⇥</span>配送签收</a>
+      <a href="bill.html" data-page="bill"><span class="ico">¥</span>月结对账</a>
+    </nav>
+    <div class="nav-group">基础资料</div>
+    <nav class="nav">
+      <a href="gardens.html" data-page="gardens"><span class="ico">园</span>幼儿园档案</a>
+      <a href="products.html" data-page="products"><span class="ico">◇</span>商品与报价</a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <h1>下单</h1>
+      <div class="meta">
+        <span id="today"></span>
+        <span class="badge brand">截单 17:00</span>
+        <div class="avatar">王</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h2>幼儿园下单入口</h2>
+          <p>老师用小程序自己下单；不想用小程序的，业务员在这里代录，两个入口进同一张订单表。</p>
+        </div>
+        <div class="row">
+          <a class="btn btn-primary" href="miniapp.html">打开小程序原型</a>
+        </div>
+      </div>
+
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="phone-status"><span>9:41</span><span>鲜达配送 · 小程序</span></div>
+          <div class="phone-head">
+            <div class="line1">明日 11月17日 配送</div>
+            <div class="line2">选好今天要的菜</div>
+          </div>
+          <div class="phone-body">
+            <div class="garden-select">
+              <span>🏫</span>
+              <select id="garden">
+                <option>阳光幼儿园</option>
+                <option>蓝天幼儿园</option>
+                <option>小太阳幼儿园</option>
+                <option>星光幼儿园</option>
+                <option>新苗幼儿园</option>
+              </select>
+              <span class="badge green">月结客户</span>
+            </div>
+            <div class="row" style="justify-content:space-between;margin-bottom:4px">
+              <span class="note">共 10 个品，今日报价</span>
+              <button class="btn btn-sm" id="repeatBtn">复制上周订单</button>
+            </div>
+            <div id="productList"></div>
+          </div>
+          <div class="phone-foot">
+            <div>
+              <div class="total-label">预计金额（按今日报价）</div>
+              <div class="total-amount" id="total">¥0.00</div>
+            </div>
+            <button class="btn btn-primary" id="submitBtn">提交订单</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-16 no-print">
+        <div class="card-body" style="display:flex;gap:28px;flex-wrap:wrap">
+          <div style="flex:1;min-width:240px">
+            <div class="t-main" style="margin-bottom:6px">① 一键复购</div>
+            <div class="note">园所每周订的东西大同小异。业务员代录时点一下"复制上周订单"，只改几个数量，一分钟录完一家。</div>
+          </div>
+          <div style="flex:1;min-width:240px">
+            <div class="t-main" style="margin-bottom:6px">② 提交即锁价</div>
+            <div class="note">提交那一刻按当天报价锁定单价，后面菜价涨跌都不影响这张订单，月底不会因为价格扯皮。</div>
+          </div>
+          <div style="flex:1;min-width:240px">
+            <div class="t-main" style="margin-bottom:6px">③ 截单时间</div>
+            <div class="note">17:00 截单，之后的订单自动进第二天，避免半夜改单影响采购和分拣。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+var PRODUCTS = [
+  { name: '土豆',      spec: '本地 · 中号', unit: '斤', price: 3.20, emoji: '🥔', last: 30 },
+  { name: '西红柿',    spec: '大棚 · 中果', unit: '斤', price: 5.60, emoji: '🍅', last: 20 },
+  { name: '上海青',    spec: '本地 · 新鲜', unit: '斤', price: 4.20, emoji: '🥬', last: 15 },
+  { name: '胡萝卜',    spec: '本地 · 中号', unit: '斤', price: 3.80, emoji: '🥕', last: 12 },
+  { name: '苹果',      spec: '红富士 80#',  unit: '斤', price: 6.50, emoji: '🍎', last: 25 },
+  { name: '香蕉',      spec: '进口 · 中把', unit: '斤', price: 4.80, emoji: '🍌', last: 18 },
+  { name: '鸡蛋',      spec: '土鸡蛋',      unit: '斤', price: 12.00, emoji: '🥚', last: 10 },
+  { name: '鸡胸肉',    spec: '冷鲜 · 真空', unit: '斤', price: 15.00, emoji: '🍗', last: 8 },
+  { name: '婴儿米粉',  spec: '辅食 · 原味', unit: '袋', price: 28.00, emoji: '🥣', last: 6 },
+  { name: '猪肝',      spec: '冷鲜 · 当日', unit: '斤', price: 18.00, emoji: '🥩', last: 4 }
+];
+
+var listEl = document.getElementById('productList');
+
+PRODUCTS.forEach(function (p, i) {
+  var row = document.createElement('div');
+  row.className = 'p-item';
+  row.innerHTML =
+    '<div class="p-thumb">' + p.emoji + '</div>' +
+    '<div class="p-info">' +
+      '<div class="p-name">' + p.name + '</div>' +
+      '<div class="p-meta">' + p.spec + ' · ' + p.price.toFixed(2) + ' 元/' + p.unit + '</div>' +
+    '</div>' +
+    '<div class="stepper">' +
+      '<button type="button" data-d="-1" data-i="' + i + '">−</button>' +
+      '<input type="number" min="0" value="0" data-i="' + i + '">' +
+      '<button type="button" data-d="1" data-i="' + i + '">+</button>' +
+    '</div>';
+  listEl.appendChild(row);
+});
+
+function recalc() {
+  var total = 0;
+  document.querySelectorAll('.p-item').forEach(function (row, i) {
+    var q = parseInt(row.querySelector('input').value, 10) || 0;
+    total += q * PRODUCTS[i].price;
+  });
+  document.getElementById('total').textContent = money(total);
+}
+
+listEl.addEventListener('click', function (e) {
+  var b = e.target.closest('button[data-d]');
+  if (!b) return;
+  var input = listEl.querySelector('input[data-i="' + b.dataset.i + '"]');
+  var v = (parseInt(input.value, 10) || 0) + parseInt(b.dataset.d, 10);
+  input.value = Math.max(0, v);
+  recalc();
+});
+listEl.addEventListener('input', function (e) {
+  if (e.target.matches('input[type=number]')) recalc();
+});
+
+document.getElementById('repeatBtn').addEventListener('click', function () {
+  PRODUCTS.forEach(function (p, i) {
+    listEl.querySelector('input[data-i="' + i + '"]').value = p.last;
+  });
+  recalc();
+  toast('已填入上周的常用数量');
+});
+
+document.getElementById('submitBtn').addEventListener('click', function () {
+  var total = document.getElementById('total').textContent;
+  if (total === '¥0.00') { toast('还没选菜呢'); return; }
+  toast('订单已提交 · ' + total + ' · 已按今日报价锁价');
+});
+</script>
+</body>
+</html>

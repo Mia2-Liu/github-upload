@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>幼儿园档案 · 鲜达配送管理</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="gardens">
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">鲜</div>
+      <div>
+        <div class="logo-name">鲜达配送</div>
+        <div class="logo-sub">幼儿园食材管理</div>
+      </div>
+    </div>
+    <div class="nav-group">日常业务</div>
+    <nav class="nav">
+      <a href="index.html" data-page="index"><span class="ico">◫</span>工作台</a>
+      <a href="order.html" data-page="order"><span class="ico">＋</span>下单</a>
+      <a href="summary.html" data-page="summary"><span class="ico">≡</span>每日汇总</a>
+      <a href="delivery.html" data-page="delivery"><span class="ico">⇥</span>配送签收</a>
+      <a href="bill.html" data-page="bill"><span class="ico">¥</span>月结对账</a>
+    </nav>
+    <div class="nav-group">基础资料</div>
+    <nav class="nav">
+      <a href="gardens.html" data-page="gardens"><span class="ico">园</span>幼儿园档案</a>
+      <a href="products.html" data-page="products"><span class="ico">◇</span>商品与报价</a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <h1>幼儿园档案</h1>
+      <div class="meta">
+        <span id="today"></span>
+        <div class="avatar">王</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h2>合作园所</h2>
+          <p>园所码是每家幼儿园在系统里的唯一标识，建园即定、不可修改。老师用微信授权手机号登录，命中白名单就直接进本园。</p>
+        </div>
+        <div class="row">
+          <button class="btn btn-primary" onclick="openNew()">＋ 新建幼儿园</button>
+        </div>
+      </div>
+
+      <div class="grid grid-4" style="margin-bottom:16px">
+        <div class="card kpi"><div class="label">合作园所</div><div class="value" id="kpiGarden">8 <small>家</small></div><div class="delta">本月新增 1 家</div></div>
+        <div class="card kpi"><div class="label">白名单手机号</div><div class="value" id="kpiPhone">21 <small>个</small></div><div class="delta">由业务员建园时录入</div></div>
+        <div class="card kpi focus"><div class="label">待审批申请</div><div class="value" id="kpiPending">2 <small>条</small></div><div class="delta">确认后自动进白名单</div></div>
+        <div class="card kpi"><div class="label">已激活老师</div><div class="value" id="kpiBound">13 <small>人</small></div><div class="delta">手机号已登录过</div></div>
+      </div>
+
+      <div class="card" id="pendingCard" style="margin-bottom:16px">
+        <div class="card-head">
+          <h3>绑定申请</h3>
+          <span class="hint">手机号不在白名单的老师，提交申请后在这里审核</span>
+        </div>
+        <table>
+          <thead>
+            <tr><th>申请人</th><th>手机号</th><th>申请园所</th><th>提交时间</th><th class="num">操作</th></tr>
+          </thead>
+          <tbody id="pendingBody"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3>园所列表</h3>
+          <span class="hint">园所码全局唯一，用于订单、账单、配送单关联</span>
+        </div>
+        <div class="sub-bar">
+          <input type="text" id="gsearch" placeholder="搜索园所名称或园所码" style="width:260px">
+          <span class="note">一个园可登记多个手机号，园长、采购、保健老师都能下单</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>幼儿园</th><th>园所码</th><th>联系人</th><th>配送线路</th>
+              <th class="num">白名单</th><th class="num">已激活</th><th>自助绑定</th><th class="num">操作</th>
+            </tr>
+          </thead>
+          <tbody id="gardenBody"></tbody>
+        </table>
+      </div>
+
+      <div class="card mt-16">
+        <div class="card-body" style="display:flex;gap:24px;flex-wrap:wrap">
+          <div style="flex:1;min-width:210px">
+            <div class="t-main">① 建园录手机号</div>
+            <div class="note" style="margin-top:4px">业务员签下园所时，把园长、采购老师的手机号录进白名单，顺手就有。</div>
+          </div>
+          <div style="flex:1;min-width:210px">
+            <div class="t-main">② 老师授权即进</div>
+            <div class="note" style="margin-top:4px">老师微信登录授权手机号，命中白名单直接进本园，不用发码、不用输码。</div>
+          </div>
+          <div style="flex:1;min-width:210px">
+            <div class="t-main">③ 没登记就审批</div>
+            <div class="note" style="margin-top:4px">新老师用园所码提交申请，你点一下通过，手机号自动进白名单。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="newModal">
+  <div class="modal" style="width:540px">
+    <div class="modal-head">
+      <h3>新建幼儿园</h3>
+      <button class="close-x" onclick="closeModal('newModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;gap:12px">
+        <div class="row" style="justify-content:space-between"><span class="t-sub">幼儿园名称</span><input type="text" id="nName" placeholder="如：彩虹幼儿园" style="width:310px"></div>
+        <div class="row" style="justify-content:space-between"><span class="t-sub">园长手机号</span><input type="text" id="nPhone" maxlength="13" placeholder="11 位手机号，自动进白名单" style="width:310px"></div>
+        <div class="row" style="justify-content:space-between"><span class="t-sub">联系人</span><input type="text" id="nContact" placeholder="如：周老师" style="width:310px"></div>
+        <div class="row" style="justify-content:space-between"><span class="t-sub">配送线路</span>
+          <select id="nRoute" style="width:310px"><option>A 线 · 06:00</option><option>B 线 · 06:30</option><option>C 线 · 07:00</option></select>
+        </div>
+        <div class="row" style="justify-content:space-between"><span class="t-sub">结算方式</span>
+          <select id="nSettle" style="width:310px"><option>月结 · 按订单金额</option><option>月结 · 按实发量</option><option>次结 · 现结</option></select>
+        </div>
+      </div>
+      <div class="note" style="margin-top:14px">保存后系统分配唯一园所码（如 GD-0009），园长手机号直接进白名单。</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('newModal')">取消</button>
+      <button class="btn btn-primary" onclick="createGarden()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="wlModal">
+  <div class="modal" style="width:560px">
+    <div class="modal-head">
+      <h3 id="wlTitle">白名单</h3>
+      <button class="close-x" onclick="closeModal('wlModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="wlList"></div>
+      <div class="row" style="margin-top:14px;gap:8px">
+        <input type="text" id="wlPhone" maxlength="13" placeholder="手机号" style="width:170px">
+        <input type="text" id="wlName" placeholder="备注，如 采购王老师" style="flex:1">
+        <button class="btn btn-primary" onclick="addPhone()">加入白名单</button>
+      </div>
+      <div class="note" style="margin-top:10px">只有白名单内的手机号授权登录后才可直接进入本园，其他手机号需申请审批。</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="qrModal">
+  <div class="modal" style="width:380px">
+    <div class="modal-head">
+      <h3 id="qrTitle">园所码</h3>
+      <button class="close-x" onclick="closeModal('qrModal')">×</button>
+    </div>
+    <div class="modal-body" style="text-align:center">
+      <div class="qr-box" id="qrGrid"></div>
+      <div style="margin-top:14px" class="code-pill" id="qrCode">GD-0001</div>
+      <div class="note" style="margin-top:10px">老师扫码后授权手机号；不在白名单的会转为绑定申请</div>
+      <div class="note" style="margin-top:4px">园所码是唯一标识，不可重置，只可在必要时暂停自助绑定</div>
+    </div>
+    <div class="modal-foot" style="justify-content:center">
+      <button class="btn" onclick="copyCode(document.getElementById('qrCode').textContent)">复制园所码</button>
+      <button class="btn btn-primary" onclick="closeModal('qrModal')">知道了</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+var GARDENS = [
+  { key: 'GD-0001', name: '阳光幼儿园', contact: '李老师', route: 'A 线 · 06:00', settle: '月结 · 按订单金额',
+    phones: [{ name: '园长李老师', phone: '138 0000 1234', active: true }, { name: '采购王老师', phone: '139 0000 2233', active: true }, { name: '保健陈老师', phone: '137 0000 4455', active: true }, { name: '新老师小周', phone: '136 0000 7788', active: false }], open: true },
+  { key: 'GD-0002', name: '蓝天幼儿园', contact: '张老师', route: 'A 线 · 06:20', settle: '月结 · 按订单金额',
+    phones: [{ name: '园长张老师', phone: '139 0000 5566', active: true }, { name: '采购刘老师', phone: '138 0000 6677', active: true }, { name: '新老师小吴', phone: '135 0000 9911', active: false }], open: true },
+  { key: 'GD-0003', name: '小太阳幼儿园', contact: '王老师', route: 'A 线 · 06:40', settle: '月结 · 按实发量',
+    phones: [{ name: '园长王老师', phone: '137 0000 1122', active: true }, { name: '采购赵老师', phone: '136 0000 3344', active: true }, { name: '保健孙老师', phone: '135 0000 5566', active: false }], open: true },
+  { key: 'GD-0004', name: '星光幼儿园', contact: '刘老师', route: 'B 线 · 06:10', settle: '月结 · 按订单金额',
+    phones: [{ name: '园长刘老师', phone: '136 0000 8899', active: true }, { name: '采购周老师', phone: '133 0000 2211', active: false }], open: true },
+  { key: 'GD-0005', name: '新苗幼儿园', contact: '陈老师', route: 'B 线 · 06:30', settle: '月结 · 按订单金额',
+    phones: [{ name: '园长陈老师', phone: '135 0000 4433', active: true }, { name: '采购吴老师', phone: '134 0000 6655', active: true }, { name: '保健郑老师', phone: '133 0000 8877', active: false }], open: true },
+  { key: 'GD-0006', name: '育才幼儿园', contact: '孙老师', route: 'B 线 · 06:50', settle: '月结 · 按订单金额',
+    phones: [{ name: '园长孙老师', phone: '133 0000 1122', active: true }, { name: '采购钱老师', phone: '132 0000 3344', active: true }, { name: '新老师小冯', phone: '131 0000 9900', active: false }], open: true },
+  { key: 'GD-0007', name: '童星幼儿园', contact: '周老师', route: 'C 线 · 07:00', settle: '月结 · 按订单金额',
+    phones: [{ name: '园长周老师', phone: '132 0000 5566', active: true }, { name: '采购蒋老师', phone: '131 0000 7788', active: false }], open: true },
+  { key: 'GD-0008', name: '金太阳幼儿园', contact: '赵老师', route: 'C 线 · 07:20', settle: '月结 · 按订单金额',
+    phones: [{ name: '园长赵老师', phone: '131 0000 2244', active: false }], open: true }
+];
+
+var PENDING = [
+  { name: '周老师', phone: '138 1111 2222', garden: '彩虹幼儿园', time: '今天 09:12' },
+  { name: '小吴', phone: '135 6666 8888', garden: '蓝天幼儿园', time: '今天 08:40' }
+];
+
+function activeCount(g) {
+  return g.phones.filter(function (p) { return p.active; }).length;
+}
+
+function renderKpi() {
+  var phones = 0, bound = 0;
+  GARDENS.forEach(function (g) { phones += g.phones.length; bound += activeCount(g); });
+  document.getElementById('kpiGarden').innerHTML = GARDENS.length + ' <small>家</small>';
+  document.getElementById('kpiPhone').innerHTML = phones + ' <small>个</small>';
+  document.getElementById('kpiBound').innerHTML = bound + ' <small>人</small>';
+  document.getElementById('kpiPending').innerHTML = PENDING.length + ' <small>条</small>';
+}
+
+function renderPending() {
+  var body = document.getElementById('pendingBody');
+  document.getElementById('pendingCard').style.display = PENDING.length ? '' : 'none';
+  body.innerHTML = PENDING.map(function (p, i) {
+    return '<tr>' +
+      '<td class="t-main">' + p.name + '</td>' +
+      '<td class="t-sub">' + p.phone + '</td>' +
+      '<td class="t-sub">' + p.garden + '</td>' +
+      '<td class="t-sub">' + p.time + '</td>' +
+      '<td class="num" style="white-space:nowrap">' +
+        '<button class="btn btn-sm btn-primary" data-act="approve" data-i="' + i + '">通过</button> ' +
+        '<button class="btn btn-sm" data-act="reject" data-i="' + i + '">拒绝</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+document.getElementById('pendingBody').addEventListener('click', function (e) {
+  var b = e.target.closest('button[data-act]');
+  if (!b) return;
+  var i = parseInt(b.dataset.i, 10);
+  var p = PENDING[i];
+  if (b.dataset.act === 'reject') {
+    PENDING.splice(i, 1);
+    renderPending(); renderKpi();
+    toast('已拒绝 ' + p.name + ' 的申请');
+    return;
+  }
+  var g = null;
+  for (var k = 0; k < GARDENS.length; k++) if (GARDENS[k].name === p.garden) g = GARDENS[k];
+  PENDING.splice(i, 1);
+  if (g) {
+    g.phones.push({ name: p.name, phone: p.phone, active: true });
+    toast('已通过，' + p.phone + ' 已加入 ' + g.name + ' 白名单');
+  } else {
+    toast('已通过，该手机号已加入白名单');
+  }
+  renderAll();
+});
+
+function renderGardens() {
+  var kw = document.getElementById('gsearch').value.trim();
+  document.getElementById('gardenBody').innerHTML = GARDENS.map(function (g, i) {
+    if (kw && g.name.indexOf(kw) < 0 && g.key.indexOf(kw.toUpperCase()) < 0) return '';
+    return '<tr>' +
+      '<td class="t-main">' + g.name + '</td>' +
+      '<td><span class="code-pill">' + g.key + '</span></td>' +
+      '<td class="t-sub">' + g.contact + '</td>' +
+      '<td class="t-sub">' + g.route + '</td>' +
+      '<td class="num"><button class="link-btn" data-act="wl" data-i="' + i + '">' + g.phones.length + ' 个</button></td>' +
+      '<td class="num">' + (activeCount(g) ? activeCount(g) + ' 人' : '<span class="note">未激活</span>') + '</td>' +
+      '<td><button class="link-btn" data-act="toggle" data-i="' + i + '">' + (g.open ? '<span class="badge green">开放</span>' : '<span class="badge">已暂停</span>') + '</button></td>' +
+      '<td class="num" style="white-space:nowrap">' +
+        '<button class="btn btn-sm" data-act="copy" data-i="' + i + '">复制码</button> ' +
+        '<button class="btn btn-sm" data-act="qr" data-i="' + i + '">二维码</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+document.getElementById('gardenBody').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-act]');
+  if (!b) return;
+  var g = GARDENS[parseInt(b.dataset.i, 10)];
+  var act = b.dataset.act;
+  if (act === 'copy') copyCode(g.key);
+  if (act === 'qr') showQR(g);
+  if (act === 'wl') openWhite(g);
+  if (act === 'toggle') {
+    g.open = !g.open;
+    renderGardens();
+    toast(g.name + (g.open ? ' 已开放自助绑定' : ' 已暂停自助绑定，白名单内老师不受影响'));
+  }
+});
+
+function renderAll() {
+  renderKpi(); renderPending(); renderGardens();
+}
+
+var wlIndex = 0;
+function openWhite(g) {
+  wlIndex = GARDENS.indexOf(g);
+  renderWhite();
+  openModal('wlModal');
+}
+
+function renderWhite() {
+  var g = GARDENS[wlIndex];
+  document.getElementById('wlTitle').textContent = g.name + ' · 白名单';
+  document.getElementById('wlList').innerHTML = g.phones.length ? g.phones.map(function (p, i) {
+    return '<div class="row" style="justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)">' +
+      '<div><span class="t-main">' + p.phone + '</span> <span class="note">' + p.name + '</span></div>' +
+      '<div class="row">' + (p.active ? '<span class="badge green">已激活</span>' : '<span class="badge amber">未登录</span>') +
+      ' <button class="link-btn" data-act="rm" data-i="' + i + '">移除</button></div>' +
+    '</div>';
+  }).join('') : '<div class="empty-note">还没有登记手机号</div>';
+}
+
+document.getElementById('wlList').addEventListener('click', function (e) {
+  var b = e.target.closest('button[data-act]');
+  if (!b) return;
+  var g = GARDENS[wlIndex];
+  var i = parseInt(b.dataset.i, 10);
+  var p = g.phones[i];
+  g.phones.splice(i, 1);
+  renderWhite(); renderAll();
+  toast('已移除 ' + p.phone + '，该手机号将无法直接登录本园');
+});
+
+function addPhone() {
+  var g = GARDENS[wlIndex];
+  var phone = document.getElementById('wlPhone').value.trim();
+  var name = document.getElementById('wlName').value.trim() || '未备注';
+  if (!/^1\d{10}$/.test(phone.replace(/\s/g, ''))) { toast('请输入 11 位手机号'); return; }
+  for (var i = 0; i < g.phones.length; i++) {
+    if (g.phones[i].phone.replace(/\s/g, '') === phone.replace(/\s/g, '')) { toast('该手机号已在白名单'); return; }
+  }
+  g.phones.push({ name: name, phone: phone, active: false });
+  document.getElementById('wlPhone').value = '';
+  document.getElementById('wlName').value = '';
+  renderWhite(); renderAll();
+  toast('已加入白名单，老师下次登录即可直接进入');
+}
+
+function copyCode(code) {
+  var done = function () { toast('园所码 ' + code + ' 已复制'); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(done, fallback);
+  } else fallback();
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = code;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); done(); } catch (err) { toast('请手动复制：' + code); }
+    document.body.removeChild(ta);
+  }
+}
+
+function finder(r, c, or, oc) {
+  if (r >= or && r < or + 7 && c >= oc && c < oc + 7) {
+    var rr = r - or, cc = c - oc;
+    return rr === 0 || rr === 6 || cc === 0 || cc === 6 || (rr >= 2 && rr <= 4 && cc >= 2 && cc <= 4);
+  }
+  return null;
+}
+
+function showQR(g) {
+  document.getElementById('qrTitle').textContent = g.name + ' · 园所码';
+  document.getElementById('qrCode').textContent = g.key;
+  var seed = 0;
+  for (var i = 0; i < g.key.length; i++) seed = (seed * 31 + g.key.charCodeAt(i)) % 9973;
+  var box = document.getElementById('qrGrid');
+  box.innerHTML = '';
+  for (var k = 0; k < 441; k++) {
+    var r = Math.floor(k / 21), c = k % 21;
+    var on = finder(r, c, 0, 0);
+    if (on === null) on = finder(r, c, 0, 14);
+    if (on === null) on = finder(r, c, 14, 0);
+    if (on === null) {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      on = ((seed >> 16) & 1) === 1;
+    }
+    var cell = document.createElement('i');
+    if (on) cell.className = 'on';
+    box.appendChild(cell);
+  }
+  openModal('qrModal');
+}
+
+function openNew() {
+  ['nName', 'nPhone', 'nContact'].forEach(function (id) { document.getElementById(id).value = ''; });
+  openModal('newModal');
+}
+
+function createGarden() {
+  var name = document.getElementById('nName').value.trim();
+  var phone = document.getElementById('nPhone').value.trim();
+  var contact = document.getElementById('nContact').value.trim() || '待补充';
+  if (!name) { toast('请填写幼儿园名称'); return; }
+  if (!/^1\d{10}$/.test(phone.replace(/\s/g, ''))) { toast('请填写园长 11 位手机号'); return; }
+  var next = 1;
+  GARDENS.forEach(function (g) {
+    var n = parseInt(g.key.split('-')[1], 10);
+    if (n >= next) next = n + 1;
+  });
+  var key = 'GD-' + ('000' + next).slice(-4);
+  GARDENS.unshift({
+    key: key, name: name, contact: contact,
+    route: document.getElementById('nRoute').value,
+    settle: document.getElementById('nSettle').value,
+    phones: [{ name: '园长', phone: phone, active: false }],
+    open: true
+  });
+  closeModal('newModal');
+  renderAll();
+  toast('已创建 ' + name + '，园所码 ' + key + '，园长手机号已进白名单');
+}
+
+document.getElementById('gsearch').addEventListener('input', renderGardens);
+renderAll();
+</script>
+</body>
+</html>

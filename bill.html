@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>月结对账 · 鲜达配送管理</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="bill">
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">鲜</div>
+      <div>
+        <div class="logo-name">鲜达配送</div>
+        <div class="logo-sub">幼儿园食材管理</div>
+      </div>
+    </div>
+    <div class="nav-group">日常业务</div>
+    <nav class="nav">
+      <a href="index.html" data-page="index"><span class="ico">◫</span>工作台</a>
+      <a href="order.html" data-page="order"><span class="ico">＋</span>下单</a>
+      <a href="summary.html" data-page="summary"><span class="ico">≡</span>每日汇总</a>
+      <a href="delivery.html" data-page="delivery"><span class="ico">⇥</span>配送签收</a>
+      <a href="bill.html" data-page="bill"><span class="ico">¥</span>月结对账</a>
+    </nav>
+    <div class="nav-group">基础资料</div>
+    <nav class="nav">
+      <a href="gardens.html" data-page="gardens"><span class="ico">园</span>幼儿园档案</a>
+      <a href="products.html" data-page="products"><span class="ico">◇</span>商品与报价</a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <h1>月结对账</h1>
+      <div class="meta">
+        <span id="today"></span>
+        <div class="avatar">王</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h2>各园账单</h2>
+          <p>订单按当天报价锁价，实发差异单独列调整项，账单金额有据可查。</p>
+        </div>
+        <div class="row">
+          <select id="monthSel">
+            <option value="2026-11">2026年11月（进行中）</option>
+            <option value="2026-10">2026年10月（已结）</option>
+          </select>
+          <button class="btn" onclick="toast('已生成 8 份账单 PDF（原型演示）')">批量生成账单</button>
+        </div>
+      </div>
+
+      <div class="grid grid-4" style="margin-bottom:16px">
+        <div class="card kpi focus"><div class="label">应收合计</div><div class="value" id="kDue">—</div><div class="delta">订单金额 + 差异调整</div></div>
+        <div class="card kpi"><div class="label">已收款</div><div class="value" id="kPaid">—</div><div class="delta">本月到账</div></div>
+        <div class="card kpi"><div class="label">未收款</div><div class="value" id="kOpen">—</div><div class="delta">含部分收款</div></div>
+        <div class="card kpi"><div class="label">逾期园所</div><div class="value" id="kOver">—</div><div class="delta">超 30 天未结清</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3 id="billTitle">2026年11月 账单</h3>
+          <span class="hint">点击"查看账单"可看明细，并转发到微信群</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>幼儿园</th>
+              <th class="num">订单金额</th>
+              <th class="num">差异调整</th>
+              <th class="num">应收</th>
+              <th class="num">已收</th>
+              <th class="num">欠款</th>
+              <th>状态</th>
+              <th class="num">操作</th>
+            </tr>
+          </thead>
+          <tbody id="billBody"></tbody>
+        </table>
+      </div>
+
+      <div class="card mt-16">
+        <div class="card-body" style="display:flex;gap:24px;flex-wrap:wrap">
+          <div style="flex:1;min-width:220px">
+            <div class="t-main">差异调整怎么来的</div>
+            <div class="note" style="margin-top:4px">签收时录入实发重量，少送自动减、加送自动增，逐条挂在对应订单上，月底汇总成调整项。</div>
+          </div>
+          <div style="flex:1;min-width:220px">
+            <div class="t-main">为什么不会扯皮</div>
+            <div class="note" style="margin-top:4px">账单里能看到每一笔调整对应哪天、哪个商品、多少斤，园所点开就能核对。</div>
+          </div>
+          <div style="flex:1;min-width:220px">
+            <div class="t-main">催收怎么盯</div>
+            <div class="note" style="margin-top:4px">欠款按园所汇总，超期自动标红，一眼知道该给谁打电话。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="billModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="bmTitle">账单</h3>
+      <button class="close-x" onclick="closeModal('billModal')">×</button>
+    </div>
+    <div class="modal-body" id="bmBody"></div>
+    <div class="modal-foot">
+      <button class="btn" onclick="window.print()">打印</button>
+      <button class="btn" onclick="toast('已转发到园所微信群（原型演示）')">转发到微信</button>
+      <button class="btn btn-primary" onclick="markPaid()">登记收款</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+var BILLS = {
+  '2026-11': [
+    { garden: '阳光幼儿园', order: 8640, adj: -86.4, paid: 0, overdue: false },
+    { garden: '蓝天幼儿园', order: 6280, adj: 0, paid: 3000, overdue: false },
+    { garden: '小太阳幼儿园', order: 5120, adj: 42, paid: 5162, overdue: false },
+    { garden: '星光幼儿园', order: 4320, adj: -20, paid: 0, overdue: true },
+    { garden: '新苗幼儿园', order: 3960, adj: 0, paid: 1000, overdue: false },
+    { garden: '育才幼儿园', order: 4880, adj: 18, paid: 4880, overdue: false },
+    { garden: '童星幼儿园', order: 3240, adj: 0, paid: 1200, overdue: false },
+    { garden: '金太阳幼儿园', order: 5760, adj: -32, paid: 0, overdue: false }
+  ],
+  '2026-10': [
+    { garden: '阳光幼儿园', order: 10240, adj: -120, paid: 10120, overdue: false },
+    { garden: '蓝天幼儿园', order: 8120, adj: 0, paid: 8120, overdue: false },
+    { garden: '小太阳幼儿园', order: 6840, adj: 36, paid: 6876, overdue: false },
+    { garden: '星光幼儿园', order: 5920, adj: -40, paid: 0, overdue: true },
+    { garden: '新苗幼儿园', order: 5120, adj: 0, paid: 5120, overdue: false },
+    { garden: '育才幼儿园', order: 6240, adj: 22, paid: 6240, overdue: false },
+    { garden: '童星幼儿园', order: 4360, adj: 0, paid: 4360, overdue: false },
+    { garden: '金太阳幼儿园', order: 7080, adj: -18, paid: 5000, overdue: true }
+  ]
+};
+
+var currentMonth = '2026-11';
+var currentBillIndex = -1;
+
+function renderBills() {
+  var rows = BILLS[currentMonth];
+  var dueSum = 0, paidSum = 0, openSum = 0, over = 0;
+
+  document.getElementById('billBody').innerHTML = rows.map(function (r, i) {
+    var due = r.order + r.adj;
+    var open = due - r.paid;
+    dueSum += due; paidSum += r.paid; openSum += Math.max(0, open);
+    if (open > 1 && r.overdue) over++;
+
+    var badge;
+    if (open <= 1) badge = '<span class="badge green">已结清</span>';
+    else if (r.overdue) badge = '<span class="badge red">逾期</span>';
+    else if (r.paid > 0) badge = '<span class="badge amber">部分收款</span>';
+    else badge = '<span class="badge">未收款</span>';
+
+    return '<tr data-i="' + i + '">' +
+      '<td class="t-main">' + r.garden + '</td>' +
+      '<td class="num">' + r.order.toFixed(2) + '</td>' +
+      '<td class="num" style="color:' + (r.adj < 0 ? 'var(--red)' : (r.adj > 0 ? 'var(--brand)' : 'var(--muted)')) + '">' +
+        (r.adj > 0 ? '+' : '') + r.adj.toFixed(2) + '</td>' +
+      '<td class="num t-main">' + due.toFixed(2) + '</td>' +
+      '<td class="num">' + r.paid.toFixed(2) + '</td>' +
+      '<td class="num">' + open.toFixed(2) + '</td>' +
+      '<td>' + badge + '</td>' +
+      '<td class="num"><button class="btn btn-sm" data-act="view" data-i="' + i + '">查看账单</button></td>' +
+    '</tr>';
+  }).join('');
+
+  document.getElementById('kDue').innerHTML = dueSum.toFixed(2) + '<small>元</small>';
+  document.getElementById('kPaid').innerHTML = paidSum.toFixed(2) + '<small>元</small>';
+  document.getElementById('kOpen').innerHTML = openSum.toFixed(2) + '<small>元</small>';
+  document.getElementById('kOver').innerHTML = over + ' <small>家</small>';
+  document.getElementById('billTitle').textContent =
+    (currentMonth === '2026-11' ? '2026年11月 账单' : '2026年10月 账单');
+}
+
+document.getElementById('billBody').addEventListener('click', function (e) {
+  var btn = e.target.closest('button[data-act]');
+  if (!btn) return;
+  showBill(parseInt(btn.dataset.i, 10));
+});
+
+function showBill(i) {
+  currentBillIndex = i;
+  var r = BILLS[currentMonth][i];
+  var due = r.order + r.adj;
+  var open = due - r.paid;
+  document.getElementById('bmTitle').textContent = r.garden + ' · 对账单';
+
+  var adjRows = r.adj === 0
+    ? '<div class="detail-row"><span>本月无差异调整</span><span>0.00</span></div>'
+    : [
+        { d: '11-05', t: '上海青 少送 2 斤', v: -8.40 },
+        { d: '11-11', t: '苹果 加送 2 斤', v: 13.00 },
+        { d: '11-14', t: '西红柿 少送 1 斤', v: -5.60 }
+      ].map(function (x) {
+        return '<div class="detail-row"><span>' + x.d + ' · ' + x.t + '</span><span style="color:' + (x.v < 0 ? 'var(--red)' : 'var(--brand)') + '">' + (x.v > 0 ? '+' : '') + x.v.toFixed(2) + '</span></div>';
+      }).join('') +
+      '<div class="detail-row"><span class="t-main">调整合计</span><span>' + (r.adj > 0 ? '+' : '') + r.adj.toFixed(2) + '</span></div>';
+
+  document.getElementById('bmBody').innerHTML =
+    '<div class="note" style="margin-bottom:12px">账期：' + currentMonth + '-01 至 ' + currentMonth + '-15 · 共 10 张订单</div>' +
+    '<table><tbody>' +
+      '<tr><td>订单金额（锁价后）</td><td class="num">' + r.order.toFixed(2) + '</td></tr>' +
+      '<tr><td>差异调整</td><td class="num">' + (r.adj > 0 ? '+' : '') + r.adj.toFixed(2) + '</td></tr>' +
+      '<tr><td class="t-main">应收合计</td><td class="num t-main">' + due.toFixed(2) + '</td></tr>' +
+      '<tr><td>已收款</td><td class="num">' + r.paid.toFixed(2) + '</td></tr>' +
+      '<tr><td class="t-main">尚欠</td><td class="num t-main">' + open.toFixed(2) + '</td></tr>' +
+    '</tbody></table>' +
+    '<div style="margin-top:16px" class="t-main">差异调整明细</div>' +
+    '<div style="margin-top:6px">' + adjRows + '</div>' +
+    '<div style="margin-top:16px" class="t-main">收款记录</div>' +
+    '<div style="margin-top:6px">' +
+      (r.paid > 0
+        ? '<div class="detail-row"><span>11-08 · 微信转账</span><span>' + r.paid.toFixed(2) + '</span></div>'
+        : '<div class="note">暂无收款记录</div>') +
+    '</div>';
+
+  openModal('billModal');
+}
+
+function markPaid() {
+  if (currentBillIndex < 0) return;
+  var r = BILLS[currentMonth][currentBillIndex];
+  r.paid = r.order + r.adj;
+  r.overdue = false;
+  closeModal('billModal');
+  renderBills();
+  toast(r.garden + ' 已登记全额收款，状态更新为「已结清」');
+}
+
+document.getElementById('monthSel').addEventListener('change', function (e) {
+  currentMonth = e.target.value;
+  renderBills();
+});
+
+renderBills();
+</script>
+</body>
+</html>

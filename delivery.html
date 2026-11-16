@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>配送签收 · 鲜达配送管理</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="delivery">
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">鲜</div>
+      <div>
+        <div class="logo-name">鲜达配送</div>
+        <div class="logo-sub">幼儿园食材管理</div>
+      </div>
+    </div>
+    <div class="nav-group">日常业务</div>
+    <nav class="nav">
+      <a href="index.html" data-page="index"><span class="ico">◫</span>工作台</a>
+      <a href="order.html" data-page="order"><span class="ico">＋</span>下单</a>
+      <a href="summary.html" data-page="summary"><span class="ico">≡</span>每日汇总</a>
+      <a href="delivery.html" data-page="delivery"><span class="ico">⇥</span>配送签收</a>
+      <a href="bill.html" data-page="bill"><span class="ico">¥</span>月结对账</a>
+    </nav>
+    <div class="nav-group">基础资料</div>
+    <nav class="nav">
+      <a href="gardens.html" data-page="gardens"><span class="ico">园</span>幼儿园档案</a>
+      <a href="products.html" data-page="products"><span class="ico">◇</span>商品与报价</a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <h1>配送签收</h1>
+      <div class="meta">
+        <span id="today"></span>
+        <span class="badge brand">11月17日 早班</span>
+        <div class="avatar">王</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h2>今早配送 8 单</h2>
+          <p>分拣完点"发车"，到园后按实发重量签收；少送加送记在这里，月底自动进账单。</p>
+        </div>
+        <div class="row">
+          <button class="btn" onclick="window.print()">打印分拣单</button>
+          <button class="btn btn-primary" id="allDone">一键全部签收</button>
+        </div>
+      </div>
+
+      <div class="grid grid-4" style="margin-bottom:16px">
+        <div class="card kpi"><div class="label">待分拣</div><div class="value">3 <small>单</small></div><div class="delta">A 线 2 单 · B 线 1 单</div></div>
+        <div class="card kpi"><div class="label">配送中</div><div class="value">2 <small>单</small></div><div class="delta">李师傅 · 张师傅</div></div>
+        <div class="card kpi"><div class="label">已签收</div><div class="value">3 <small>单</small></div><div class="delta">差异 1 单</div></div>
+        <div class="card kpi focus"><div class="label">今日差异</div><div class="value">2 <small>项</small></div><div class="delta">合计 -¥21.60</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3>配送单列表</h3>
+          <span class="hint">点击行查看分拣明细并签收</span>
+        </div>
+        <table>
+          <thead>
+            <tr><th>幼儿园</th><th>线路 / 司机</th><th>送达时间</th><th class="num">品项</th><th class="num">金额</th><th>状态</th><th class="num">操作</th></tr>
+          </thead>
+          <tbody id="deliveryBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="signModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="mTitle">签收 · 阳光幼儿园</h3>
+      <button class="close-x" onclick="closeModal('signModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="note" style="margin-bottom:10px">下单量按订单，实发量按现场称重。差异会自动生成调整项，计入本月账单。</div>
+      <table>
+        <thead>
+          <tr><th>商品</th><th class="num">下单</th><th class="num">实发</th><th class="num">差异</th><th>原因</th></tr>
+        </thead>
+        <tbody id="signBody"></tbody>
+      </table>
+      <div class="card" style="margin-top:14px;background:#FAFAFC;box-shadow:none">
+        <div class="card-body">
+          <div class="detail-row"><span>订单金额</span><span id="sumOrder">¥0.00</span></div>
+          <div class="detail-row"><span>差异调整</span><span id="sumDiff">¥0.00</span></div>
+          <div class="detail-row"><span class="t-main">实收金额</span><span class="t-main" id="sumFinal">¥0.00</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('signModal')">取消</button>
+      <button class="btn btn-primary" id="confirmSign">确认签收</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+var DELIVERIES = [
+  {
+    id: 'D2401', garden: '阳光幼儿园', route: 'A 线 · 王师傅', status: '待分拣',
+    items: [
+      { name: '土豆', unit: '斤', planned: 30, actual: 30, price: 3.20 },
+      { name: '上海青', unit: '斤', planned: 15, actual: 13, price: 4.20, reason: '少送' },
+      { name: '西红柿', unit: '斤', planned: 20, actual: 20, price: 5.60 },
+      { name: '苹果', unit: '斤', planned: 25, actual: 27, price: 6.50, reason: '加送' }
+    ]
+  },
+  {
+    id: 'D2402', garden: '蓝天幼儿园', route: 'A 线 · 王师傅', status: '待分拣',
+    items: [
+      { name: '土豆', unit: '斤', planned: 26, actual: 26, price: 3.20 },
+      { name: '胡萝卜', unit: '斤', planned: 16, actual: 16, price: 3.80 },
+      { name: '鸡蛋', unit: '斤', planned: 12, actual: 12, price: 12.00 }
+    ]
+  },
+  {
+    id: 'D2403', garden: '小太阳幼儿园', route: 'A 线 · 李师傅', status: '配送中',
+    items: [
+      { name: '土豆', unit: '斤', planned: 30, actual: 30, price: 3.20 },
+      { name: '香蕉', unit: '斤', planned: 20, actual: 20, price: 4.80 },
+      { name: '婴儿米粉', unit: '袋', planned: 6, actual: 6, price: 28.00 }
+    ]
+  },
+  {
+    id: 'D2404', garden: '星光幼儿园', route: 'B 线 · 张师傅', status: '待分拣',
+    items: [
+      { name: '苹果', unit: '斤', planned: 32, actual: 32, price: 6.50 },
+      { name: '鸡胸肉', unit: '斤', planned: 16, actual: 16, price: 15.00 }
+    ]
+  },
+  {
+    id: 'D2405', garden: '新苗幼儿园', route: 'B 线 · 张师傅', status: '已签收',
+    items: [
+      { name: '上海青', unit: '斤', planned: 10, actual: 10, price: 4.20 },
+      { name: '苹果', unit: '斤', planned: 25, actual: 25, price: 6.50 }
+    ]
+  },
+  {
+    id: 'D2406', garden: '育才幼儿园', route: 'B 线 · 赵师傅', status: '已签收',
+    items: [
+      { name: '胡萝卜', unit: '斤', planned: 20, actual: 20, price: 3.80 }
+    ]
+  },
+  {
+    id: 'D2407', garden: '童星幼儿园', route: 'C 线 · 赵师傅', status: '已签收',
+    items: [
+      { name: '鸡蛋', unit: '斤', planned: 18, actual: 18, price: 12.00 }
+    ]
+  },
+  {
+    id: 'D2408', garden: '金太阳幼儿园', route: 'C 线 · 李师傅', status: '配送中',
+    items: [
+      { name: '西红柿', unit: '斤', planned: 24, actual: 24, price: 5.60 },
+      { name: '猪肝', unit: '斤', planned: 14, actual: 14, price: 18.00 }
+    ]
+  }
+];
+
+var current = null;
+var SLOT = { D2401: '06:30', D2402: '06:50', D2403: '07:20', D2404: '06:20', D2405: '07:00', D2406: '06:40', D2407: '07:10', D2408: '07:30' };
+
+function statusBadge(s) {
+  if (s === '已签收') return '<span class="badge green">已签收</span>';
+  if (s === '配送中') return '<span class="badge brand">配送中</span>';
+  return '<span class="badge amber">待分拣</span>';
+}
+
+function renderList() {
+  var body = document.getElementById('deliveryBody');
+  body.innerHTML = DELIVERIES.map(function (d, i) {
+    var amount = d.items.reduce(function (s, it) { return s + it.actual * it.price; }, 0);
+    return '<tr style="cursor:pointer" data-i="' + i + '">' +
+      '<td class="t-main">' + d.garden + '</td>' +
+      '<td class="t-sub">' + d.route + '</td>' +
+      '<td class="t-sub">' + SLOT[d.id] + '</td>' +
+      '<td class="num">' + d.items.length + '</td>' +
+      '<td class="num">' + amount.toFixed(2) + '</td>' +
+      '<td><select class="status-sel" data-i="' + i + '">' +
+        ['待分拣', '配送中', '已签收'].map(function (s) {
+          return '<option' + (d.status === s ? ' selected' : '') + '>' + s + '</option>';
+        }).join('') +
+      '</select></td>' +
+      '<td class="num">' + (d.status === '已签收'
+        ? '<span class="note">已归档</span>'
+        : '<button class="btn btn-sm">签收</button>') + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+document.getElementById('deliveryBody').addEventListener('click', function (e) {
+  if (e.target.closest('select')) return;
+  var tr = e.target.closest('tr[data-i]');
+  if (!tr) return;
+  openSign(parseInt(tr.dataset.i, 10));
+});
+
+document.getElementById('deliveryBody').addEventListener('change', function (e) {
+  var sel = e.target.closest('select.status-sel');
+  if (!sel) return;
+  var d = DELIVERIES[parseInt(sel.dataset.i, 10)];
+  d.status = sel.value;
+  renderList();
+  toast(d.garden + ' 状态已改为「' + d.status + '」');
+});
+
+function openSign(i) {
+  current = DELIVERIES[i];
+  document.getElementById('mTitle').textContent = '签收 · ' + current.garden;
+  var body = document.getElementById('signBody');
+  body.innerHTML = current.items.map(function (it, k) {
+    return '<tr>' +
+      '<td class="t-main">' + it.name + ' <span class="t-sub">/ ' + it.unit + '</span></td>' +
+      '<td class="num">' + it.planned + '</td>' +
+      '<td class="num"><input type="number" min="0" style="width:72px;text-align:center" data-k="' + k + '" value="' + it.actual + '"></td>' +
+      '<td class="num" data-diff="' + k + '">—</td>' +
+      '<td><select data-r="' + k + '">' +
+        ['无差异', '少送', '加送', '换品', '质量问题'].map(function (r) {
+          return '<option' + ((it.reason || '无差异') === r ? ' selected' : '') + '>' + r + '</option>';
+        }).join('') +
+      '</select></td>' +
+    '</tr>';
+  }).join('');
+  updateSignSums();
+  openModal('signModal');
+}
+
+function updateSignSums() {
+  if (!current) return;
+  var orderAmt = 0, actualAmt = 0;
+  current.items.forEach(function (it, k) {
+    var input = document.querySelector('#signBody input[data-k="' + k + '"]');
+    var actual = input ? (parseFloat(input.value) || 0) : it.actual;
+    var diffEl = document.querySelector('[data-diff="' + k + '"]');
+    var d = actual - it.planned;
+    if (diffEl) {
+      diffEl.innerHTML = d === 0
+        ? '<span class="note">—</span>'
+        : '<span class="badge ' + (d > 0 ? 'brand' : 'red') + '">' + (d > 0 ? '+' : '') + d + ' ' + it.unit + '</span>';
+    }
+    orderAmt += it.planned * it.price;
+    actualAmt += actual * it.price;
+  });
+  var diff = actualAmt - orderAmt;
+  document.getElementById('sumOrder').textContent = money(orderAmt);
+  document.getElementById('sumDiff').innerHTML = diff === 0 ? money(0) : '<span style="color:' + (diff > 0 ? 'var(--brand)' : 'var(--red)') + '">' + (diff > 0 ? '+' : '') + money(diff) + '</span>';
+  document.getElementById('sumFinal').textContent = money(actualAmt);
+}
+
+document.getElementById('signBody').addEventListener('input', function (e) {
+  if (e.target.matches('input[data-k]')) {
+    var k = e.target.dataset.k;
+    current.items[k].actual = parseFloat(e.target.value) || 0;
+    updateSignSums();
+  }
+});
+
+document.getElementById('confirmSign').addEventListener('click', function () {
+  var diffs = current.items.filter(function (it) { return it.actual !== it.planned; }).length;
+  current.status = '已签收';
+  closeModal('signModal');
+  renderList();
+  toast(diffs ? '已签收 · ' + diffs + ' 项差异已计入本月账单' : '已签收 · 无差异');
+});
+
+document.getElementById('allDone').addEventListener('click', function () {
+  DELIVERIES.forEach(function (d) { d.status = '已签收'; });
+  renderList();
+  toast('8 单已全部签收（原型演示）');
+});
+
+renderList();
+</script>
+</body>
+</html>
