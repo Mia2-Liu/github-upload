@@ -178,7 +178,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 
 /* ---------- forms ---------- */
-input[type="text"], input[type="number"], input[type="date"], select {
+input[type="text"], input[type="number"], input[type="date"], input[type="password"], select {
   font-family: inherit; font-size: 14px; color: var(--text);
   padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px;
   background: #fff; outline: none;

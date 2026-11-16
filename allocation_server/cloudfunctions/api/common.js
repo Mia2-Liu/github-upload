@@ -1,4 +1,5 @@
 const cloud = require('wx-server-sdk')
+const crypto = require('crypto')
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
@@ -83,6 +84,47 @@ async function requireStaff(openid) {
   return staff
 }
 
+function sha256(text) {
+  return crypto.createHash('sha256').update(String(text)).digest('hex')
+}
+
+// 与 initDb 写入 settings/admin 的算法保持一致
+function hashPassword(salt, password) {
+  return sha256(String(salt || '') + ':' + String(password || ''))
+}
+
+function newToken() {
+  return crypto.randomBytes(24).toString('hex')
+}
+
+// 后台会话有效期 7 天
+const ADMIN_SESSION_TTL = 7 * 86400000
+
+/**
+ * 管理员鉴权：
+ * 1) 后台 Web 用口令换取的 adminToken（存 admin_sessions）
+ * 2) 小程序内管理员手机号登录得到的 openid（staff.role === 'admin'）
+ */
+async function requireAdmin(openid, event) {
+  const token = String((event && event.adminToken) || '').trim()
+  if (token) {
+    try {
+      const r = await db.collection('admin_sessions').doc(token).get()
+      const s = r.data
+      if (s && Number(s.expiresAt) > Date.now()) {
+        return { role: 'admin', name: s.name || '管理员', via: 'token' }
+      }
+    } catch (e) {
+      // token 不存在或已过期，继续尝试 openid
+    }
+  }
+
+  const staff = await getStaff(openid)
+  if (staff && staff.role === 'admin') return Object.assign({}, staff, { via: 'openid' })
+
+  throw new ApiError(403, '需要管理员权限，请先登录后台')
+}
+
 async function getGarden(key) {
   if (!key) return null
   try {
@@ -136,6 +178,11 @@ module.exports = {
   publicStaff,
   getStaff,
   requireStaff,
+  sha256,
+  hashPassword,
+  newToken,
+  ADMIN_SESSION_TTL,
+  requireAdmin,
   getGarden,
   fetchAll,
   addLog

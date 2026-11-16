@@ -1,4 +1,5 @@
 const cloud = require('wx-server-sdk')
+const crypto = require('crypto')
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
@@ -45,8 +46,39 @@ async function seedCollection(name, docs) {
   return { ok: inserted === docs.length, inserted }
 }
 
+async function setAdminPassword(password) {
+  const salt = crypto.randomBytes(8).toString('hex')
+  const passwordHash = seeds.hashPassword(salt, password)
+  const total = await countOf('settings')
+  try {
+    if (total > 0) {
+      const r = await db.collection('settings').doc('admin').update({
+        data: { salt, passwordHash, isDefaultPassword: false, updatedAt: new Date() }
+      })
+      if (!r.stats || r.stats.updated < 1) {
+        await db.collection('settings').add({
+          data: { _id: 'admin', name: '管理员', salt, passwordHash, isDefaultPassword: false, createdAt: new Date() }
+        })
+        return 'created'
+      }
+      return 'updated'
+    }
+    await db.collection('settings').add({
+      data: { _id: 'admin', name: '管理员', salt, passwordHash, isDefaultPassword: false, createdAt: new Date() }
+    })
+    return 'created'
+  } catch (e) {
+    return 'error: ' + String((e && e.message) || e).slice(0, 80)
+  }
+}
+
 exports.main = async function (event) {
   const adminPhone = normalizePhone(event && event.adminPhone)
+  const adminPassword = String((event && event.adminPassword) || '').trim()
+
+  if (adminPassword && adminPassword.length < 6) {
+    return { code: 400, msg: 'adminPassword 至少 6 位', data: null }
+  }
 
   const result = { collections: {}, seeds: {} }
 
@@ -65,6 +97,14 @@ exports.main = async function (event) {
   result.seeds.gardens = await seedCollection('gardens', seeds.gardens)
   result.seeds.products = await seedCollection('products', seeds.products)
   result.seeds.admins = await seedCollection('admins', admins)
+  result.seeds.settings = await seedCollection('settings', seeds.settings)
+
+  if (adminPassword) {
+    result.seeds.settings.password = await setAdminPassword(adminPassword)
+    result.seeds.settings.hint = '后台口令已按 adminPassword 设置'
+  } else {
+    result.seeds.settings.hint = '后台口令为默认 123456；再次调用 initDb 时传入 adminPassword 可修改'
+  }
 
   // 已有管理员数据时，允许单独改管理员手机号
   if (/^1[3-9]\d{9}$/.test(adminPhone) && result.seeds.admins.skipped) {

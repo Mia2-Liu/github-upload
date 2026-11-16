@@ -1,6 +1,16 @@
 // 初始化用的种子数据，与原型（allocation_platform / allocation_order）保持一致。
 // 手机号统一存 11 位纯数字，展示时前端再格式化。
 
+const crypto = require('crypto')
+
+// 与云函数 api/common.js 的 hashPassword 保持一致
+function hashPassword(salt, password) {
+  return crypto.createHash('sha256').update(String(salt) + ':' + String(password)).digest('hex')
+}
+
+const DEFAULT_ADMIN_PASSWORD = '123456'
+const ADMIN_SALT = 'xianda-kindergarten-2026'
+
 const gardens = [
   {
     _id: 'GD-0001',
@@ -133,6 +143,24 @@ const admins = [
   { _id: 'admin-1', phone: '15910662043', name: '王经理', role: 'admin', active: true }
 ]
 
-const collections = ['gardens', 'products', 'staff', 'admins', 'bind_requests', 'orders', 'adjustments', 'bills', 'op_logs']
+const settings = [
+  {
+    _id: 'admin',
+    name: '管理员',
+    salt: ADMIN_SALT,
+    passwordHash: hashPassword(ADMIN_SALT, DEFAULT_ADMIN_PASSWORD),
+    isDefaultPassword: true
+  }
+]
 
-module.exports = { gardens, products, admins, collections }
+const collections = ['gardens', 'products', 'staff', 'admins', 'bind_requests', 'orders', 'adjustments', 'bills', 'op_logs', 'settings', 'admin_sessions']
+
+module.exports = {
+  gardens,
+  products,
+  admins,
+  settings,
+  collections,
+  hashPassword,
+  DEFAULT_ADMIN_PASSWORD
+}

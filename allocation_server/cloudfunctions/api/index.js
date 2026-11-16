@@ -279,8 +279,7 @@ async function submitOrder(openid, event) {
  * 仅管理员可看（老师只看自己园所，避免跨园数据泄露）。
  */
 async function dailySummary(openid, event) {
-  const staff = await c.requireStaff(openid)
-  if (staff.role !== 'admin') throw new c.ApiError(403, '仅管理员可查看每日汇总')
+  await c.requireAdmin(openid, event)
 
   const date = c.normalizeDate(event.date) || c.cstDate(1)
   if (!date) throw new c.ApiError(400, '日期格式应为 YYYY-MM-DD')
@@ -446,7 +445,134 @@ async function myOrders(openid, event) {
   })
 }
 
+/**
+ * 接口：adminLogin
+ * 入参 { password }
+ * 后台 Web 没有微信身份，用管理口令换 adminToken，后续管理接口带 token。
+ */
+async function adminLogin(openid, event) {
+  const password = String(event.password || '')
+  if (!password) throw new c.ApiError(400, '请输入管理员口令')
+
+  let settings = null
+  try {
+    const r = await db.collection('settings').doc('admin').get()
+    settings = r.data || null
+  } catch (e) {
+    settings = null
+  }
+  if (!settings || !settings.salt || !settings.passwordHash) {
+    throw new c.ApiError(500, '后台口令未初始化，请先运行 initDb 并设置 adminPassword')
+  }
+  if (c.hashPassword(settings.salt, password) !== settings.passwordHash) {
+    await c.addLog('', 'admin', 'admin.login.fail', {})
+    throw new c.ApiError(403, '口令不正确')
+  }
+
+  const token = c.newToken()
+  const now = Date.now()
+  const expiresAt = now + c.ADMIN_SESSION_TTL
+  await db.collection('admin_sessions').add({
+    data: {
+      _id: token,
+      name: settings.name || '管理员',
+      createdAt: new Date(now),
+      expiresAt
+    }
+  })
+  await c.addLog('', settings.name || 'admin', 'admin.login', { token: token.slice(0, 8) })
+
+  return c.ok({ token, expiresAt, name: settings.name || '管理员' })
+}
+
+function publicRequest(r) {
+  return {
+    requestId: r._id,
+    name: r.name || '',
+    phone: r.phone,
+    gardenKey: r.gardenKey,
+    gardenName: r.gardenName,
+    status: r.status,
+    createdAt: r.createdAt
+  }
+}
+
+/**
+ * 接口：bindRequests
+ * 入参 { adminToken }
+ * 待审批的绑定申请列表。
+ */
+async function bindRequests(openid, event) {
+  await c.requireAdmin(openid, event)
+  const rows = await c.fetchAll('bind_requests', { status: 'pending' })
+  rows.sort(function (a, b) {
+    return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
+  })
+  return c.ok({ total: rows.length, requests: rows.map(publicRequest) })
+}
+
+/**
+ * 接口：reviewBind
+ * 入参 { adminToken, requestId, approve: boolean }
+ * 通过：申请手机号写进园所白名单（active:true），老师下次登录自动绑定。
+ */
+async function reviewBind(openid, event) {
+  const admin = await c.requireAdmin(openid, event)
+  const requestId = String(event.requestId || '').trim()
+  if (!requestId) throw new c.ApiError(400, '缺少申请单号')
+
+  let req = null
+  try {
+    const r = await db.collection('bind_requests').doc(requestId).get()
+    req = r.data || null
+  } catch (e) {
+    req = null
+  }
+  if (!req) throw new c.ApiError(404, '申请不存在或已删除')
+  if (req.status !== 'pending') throw new c.ApiError(400, '该申请已处理，无需重复操作')
+
+  const approve = event.approve === true || event.approve === 'true' || event.action === 'approve'
+
+  if (approve) {
+    const garden = await c.getGarden(req.gardenKey)
+    if (!garden) throw new c.ApiError(404, '申请关联的园所不存在')
+
+    const phones = (garden.phones || []).map(function (p) {
+      return Object.assign({}, p)
+    })
+    const hit = phones.filter(function (p) {
+      return c.normalizePhone(p.phone) === req.phone
+    })[0]
+    if (hit) {
+      hit.active = true
+      if (!hit.name && req.name) hit.name = req.name
+    } else {
+      phones.push({ name: req.name || '新老师', phone: req.phone, active: true })
+    }
+    await db.collection('gardens').doc(req.gardenKey).update({ data: { phones } })
+  }
+
+  const status = approve ? 'approved' : 'rejected'
+  await db.collection('bind_requests').doc(requestId).update({
+    data: {
+      status,
+      reviewedAt: new Date(),
+      reviewer: admin.name || '管理员'
+    }
+  })
+  await c.addLog(openid, admin.name || '管理员', approve ? 'bind.approve' : 'bind.reject', {
+    requestId,
+    gardenKey: req.gardenKey,
+    phone: req.phone
+  })
+
+  return c.ok({ requestId, status, phone: req.phone, gardenKey: req.gardenKey })
+}
+
 const handlers = {
+  adminLogin: adminLogin,
+  bindRequests: bindRequests,
+  reviewBind: reviewBind,
   login: login,
   bindApply: bindApply,
   products: products,

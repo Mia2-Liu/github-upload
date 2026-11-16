@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>管理后台 · 鲜达配送管理</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="admin">
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">鲜</div>
+      <div>
+        <div class="logo-name">鲜达配送</div>
+        <div class="logo-sub">幼儿园食材管理</div>
+      </div>
+    </div>
+    <div class="nav-group">日常业务</div>
+    <nav class="nav">
+      <a href="index.html" data-page="index"><span class="ico">◫</span>工作台</a>
+      <a href="order.html" data-page="order"><span class="ico">＋</span>下单</a>
+      <a href="summary.html" data-page="summary"><span class="ico">≡</span>每日汇总</a>
+      <a href="delivery.html" data-page="delivery"><span class="ico">⇥</span>配送签收</a>
+      <a href="bill.html" data-page="bill"><span class="ico">¥</span>月结对账</a>
+    </nav>
+    <div class="nav-group">基础资料</div>
+    <nav class="nav">
+      <a href="gardens.html" data-page="gardens"><span class="ico">园</span>幼儿园档案</a>
+      <a href="products.html" data-page="products"><span class="ico">◇</span>商品与报价</a>
+    </nav>
+    <div class="nav-group">系统</div>
+    <nav class="nav">
+      <a href="admin.html" data-page="admin"><span class="ico">⚙</span>管理后台</a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <h1>管理后台</h1>
+      <div class="meta">
+        <span id="today"></span>
+        <span id="adminName" style="display:none"></span>
+        <button class="btn btn-sm" id="logoutBtn" style="display:none" onclick="logout()">退出</button>
+        <div class="avatar">管</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- 登录 -->
+      <div class="card" id="loginCard" style="max-width:460px">
+        <div class="card-head">
+          <h3>管理员登录</h3>
+          <span class="hint">口令由 initDb 初始化</span>
+        </div>
+        <div class="card-body">
+          <div id="envGroup" style="display:none;margin-bottom:12px">
+            <label class="note" for="envInput">云开发环境 ID</label>
+            <input type="text" id="envInput" placeholder="例如 kindergarten-1g2h3i" style="width:100%;margin-top:6px">
+          </div>
+          <label class="note" for="pwdInput">管理口令</label>
+          <input type="password" id="pwdInput" placeholder="请输入管理口令" style="width:100%;margin:6px 0 14px">
+          <button class="btn btn-primary" id="loginBtn" style="width:100%" onclick="doLogin()">登录</button>
+          <p class="note" style="margin:12px 0 0">后台通过云开发匿名登录调用云函数，只有口令正确才会返回管理员 token，有效期 7 天。</p>
+        </div>
+      </div>
+
+      <!-- 后台面板 -->
+      <div id="adminPanel" style="display:none">
+        <div class="page-head">
+          <div>
+            <h2>业务管理</h2>
+            <p>审核老师绑定申请，查看明日下单汇总。</p>
+          </div>
+          <div class="row">
+            <button class="btn" onclick="loadAll()">刷新</button>
+          </div>
+        </div>
+
+        <div class="grid grid-4" style="margin-bottom:16px">
+          <div class="card kpi focus"><div class="label">待审批申请</div><div class="value" id="kpiPending">- <small>条</small></div><div class="delta">通过后自动进白名单</div></div>
+          <div class="card kpi"><div class="label">明日订单</div><div class="value" id="kpiOrders">- <small>单</small></div><div class="delta" id="kpiDate">-</div></div>
+          <div class="card kpi"><div class="label">明日金额</div><div class="value" id="kpiAmount">- <small>元</small></div><div class="delta">按提交时报价锁定</div></div>
+          <div class="card kpi"><div class="label">未下单园所</div><div class="value" id="kpiMissing">- <small>家</small></div><div class="delta">可电话提醒</div></div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-head">
+            <h3>绑定申请</h3>
+            <span class="hint">手机号不在白名单的老师，提交申请后在这里审核</span>
+          </div>
+          <table>
+            <thead>
+              <tr><th>申请人</th><th>手机号</th><th>申请园所</th><th>提交时间</th><th class="num">操作</th></tr>
+            </thead>
+            <tbody id="pendingBody"></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-head">
+            <h3>明日商品汇总</h3>
+            <span class="hint" id="summaryHint">-</span>
+          </div>
+          <table>
+            <thead>
+              <tr><th>商品</th><th>单位</th><th class="num">数量</th><th class="num">园所数</th><th class="num">金额</th></tr>
+            </thead>
+            <tbody id="productBody"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3>园所下单情况</h3>
+            <span class="hint">按园所汇总，未下单的在下方单独提示</span>
+          </div>
+          <table>
+            <thead>
+              <tr><th>幼儿园</th><th>园所码</th><th class="num">订单数</th><th class="num">金额</th><th>状态</th></tr>
+            </thead>
+            <tbody id="gardenBody"></tbody>
+          </table>
+          <div class="card-body">
+            <div class="note" id="missingNote">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/1.7.0/cloudbase.full.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/admin.js"></script>
+</body>
+</html>
