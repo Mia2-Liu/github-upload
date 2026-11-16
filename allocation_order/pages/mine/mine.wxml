@@ -1,0 +1,40 @@
+<view class="me-wrap">
+  <view class="me-card">
+    <view class="me-avatar">{{avatarText}}</view>
+    <view class="me-info">
+      <view class="me-name">{{garden.name}}</view>
+      <view class="me-sub">{{staff.name || '老师'}} · {{phoneText}}</view>
+    </view>
+  </view>
+
+  <view class="sec">
+    <view class="sec-title">园所信息</view>
+    <view class="row-item">
+      <text class="row-main muted">园所码</text>
+      <text>{{garden.key}}</text>
+    </view>
+    <view class="row-item">
+      <text class="row-main muted">配送线路</text>
+      <text>{{garden.route || '—'}}</text>
+    </view>
+    <view class="row-item">
+      <text class="row-main muted">结算方式</text>
+      <text>{{garden.settle || '月结'}}</text>
+    </view>
+  </view>
+
+  <view class="sec">
+    <view class="sec-title">账单说明</view>
+    <view class="tip-line">· 账单 = 当月订单金额 + 差异调整项</view>
+    <view class="tip-line">· 每月 1 号由业务员生成上月账单，确认后再付款</view>
+  </view>
+
+  <view class="sec">
+    <view class="row-item" bindtap="logout">
+      <text class="row-main danger">退出登录</text>
+      <text class="arrow">›</text>
+    </view>
+  </view>
+
+  <view class="version">鲜达配送 · 幼儿园端</view>
+</view>

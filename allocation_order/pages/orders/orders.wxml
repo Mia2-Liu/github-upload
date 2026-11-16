@@ -1,0 +1,57 @@
+<view class="cats">
+  <view wx:for="{{filters}}" wx:key="*this"
+        class="cat {{filter === item ? 'on' : ''}}"
+        data-f="{{item}}" bindtap="switchFilter">{{item}}</view>
+</view>
+
+<view wx:for="{{list}}" wx:key="orderId" class="order-card"
+      data-id="{{item.orderId}}" bindtap="openDetail">
+  <view class="order-top">
+    <text class="no">{{item.orderNo}}</text>
+    <text class="tag {{item.tagClass}}">{{item.status}}</text>
+  </view>
+  <view class="order-mid">{{item.names}}{{item.itemCount > 3 ? ' 等' : ''}}</view>
+  <view class="order-mid sm muted">{{item.dateText}} 送达 · {{item.itemCount}} 个品</view>
+  <view class="order-bot">
+    <text class="money">{{item.amountText}}</text>
+    <text class="link-btn">查看明细 ›</text>
+  </view>
+</view>
+
+<view class="empty" wx:if="{{!list.length}}">这个状态下还没有订单</view>
+<view class="footer-space"></view>
+
+<view class="mask" wx:if="{{detail}}" bindtap="closeDetail">
+  <view class="sheet" catchtap="noop">
+    <view class="sheet-head">
+      <text>{{detail.orderNo}}</text>
+      <text class="close" bindtap="closeDetail">×</text>
+    </view>
+    <view class="sheet-body">
+      <view class="dline">
+        <text class="muted">配送日期</text>
+        <text>{{detail.date}}</text>
+      </view>
+      <view class="dline">
+        <text class="muted">状态</text>
+        <text>{{detail.status}}</text>
+      </view>
+      <view class="dline">
+        <text class="muted">下单时间</text>
+        <text>{{detail.timeText}}</text>
+      </view>
+      <view class="dline" wx:for="{{detail.items}}" wx:key="productId">
+        <text>{{item.name}} {{item.qty}}{{item.unit}}</text>
+        <text>{{item.amountText}} 元</text>
+      </view>
+      <view class="dline total">
+        <text>合计</text>
+        <text>{{detail.amountText}} 元</text>
+      </view>
+      <view class="dline" wx:if="{{detail.remark}}">
+        <text class="muted">备注</text>
+        <text>{{detail.remark}}</text>
+      </view>
+    </view>
+  </view>
+</view>

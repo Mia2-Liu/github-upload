@@ -1,0 +1,60 @@
+<view class="hero">
+  <view class="hello">{{greeting}}，{{staff.name || '老师'}}</view>
+  <view class="school">{{garden.name}}</view>
+  <view class="deliver">
+    <view class="deliver-text">
+      <view class="b">明天 {{tomorrowText}} 07:30 前送达</view>
+      <view class="s">{{garden.route || '按线路配送'}}</view>
+    </view>
+    <view class="go" bindtap="goOrder">去下单</view>
+  </view>
+</view>
+
+<view class="notice" wx:if="{{needOrder}}">
+  <text class="tag amber">提醒</text>
+  <text>明天还没下单，今天 16:00 截单</text>
+</view>
+
+<view class="quick">
+  <view class="quick-item" bindtap="goOrder">
+    <view class="qi">🧾</view>
+    <text>下单</text>
+  </view>
+  <view class="quick-item" bindtap="goOrders">
+    <view class="qi">📦</view>
+    <text>我的订单</text>
+  </view>
+  <view class="quick-item" bindtap="goMine">
+    <view class="qi">💳</view>
+    <text>我的</text>
+  </view>
+</view>
+
+<view class="sec">
+  <view class="sec-title">
+    <text>最近订单</text>
+    <text class="sub" bindtap="goOrders">全部 ›</text>
+  </view>
+  <view class="row-item" wx:for="{{orders}}" wx:key="orderId" bindtap="goOrders">
+    <view class="p-thumb">🧺</view>
+    <view class="row-main">
+      <view class="n">{{item.itemCount}} 个品 · {{item.amountText}} 元</view>
+      <view class="s">{{item.dateText}} 送达 · 单号 {{item.shortNo}}</view>
+    </view>
+    <view class="row-val">
+      <text class="tag {{item.tagClass}}">{{item.status}}</text>
+    </view>
+  </view>
+  <view class="empty" wx:if="{{!orders.length}}">
+    还没有订单，点「去下单」开始
+  </view>
+</view>
+
+<view class="sec tips">
+  <view class="sec-title">下单说明</view>
+  <view class="tip-line">· 当天 16:00 前下单，次日 07:30 前送达</view>
+  <view class="tip-line">· 下单即按当日报价锁价，配送差异由业务员出调整单</view>
+  <view class="tip-line">· 月结对账：每月 1 号出上月账单</view>
+</view>
+
+<view class="footer-space"></view>

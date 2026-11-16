@@ -4,16 +4,36 @@ const db = c.db
 const _ = c._
 
 /**
+ * 解析手机号：
+ * 1) 前端直接传 phone（调试 / 手动输入）
+ * 2) 传 phoneCode（<button open-type="getPhoneNumber"> 的 code），由云调用换取手机号
+ */
+async function resolvePhone(event) {
+  const direct = c.normalizePhone(event.phone)
+  if (direct) return direct
+
+  const code = String(event.phoneCode || '').trim()
+  if (!code) return ''
+
+  try {
+    const res = await c.cloud.openapi.phonenumber.getPhoneNumber({ code })
+    const info = res.phoneInfo || res.phone_info || {}
+    return c.normalizePhone(info.phoneNumber || info.purePhoneNumber)
+  } catch (e) {
+    console.error('[login] getPhoneNumber failed:', e)
+    throw new c.ApiError(400, '手机号授权失败，请重试或手动输入手机号')
+  }
+}
+
+/**
  * 接口：login
- * 入参 { phone }
- * 老师首次登录时由前端（getPhoneNumber）拿到手机号传入。
- * 生产环境建议改为：前端传 code，云函数用 cloud.openapi.phonenumber.getPhoneNumber 换取手机号，
- * 避免手机号由客户端直接上报被伪造。
+ * 入参 { phone } 或 { phoneCode }
+ * 返回 { authenticated, staff, garden } 或 { authenticated:false, reason }
  */
 async function login(openid, event) {
   if (!openid) throw new c.ApiError(401, '缺少微信身份，请在小程序内登录')
 
-  const phone = c.normalizePhone(event.phone)
+  const phone = await resolvePhone(event)
   if (!phone) return c.ok({ authenticated: false, reason: 'NEED_PHONE', hint: '请授权手机号后登录' })
   if (!c.isValidPhone(phone)) throw new c.ApiError(400, '手机号格式不正确')
 
@@ -358,10 +378,80 @@ async function dailySummary(openid, event) {
   })
 }
 
+/**
+ * 接口：products
+ * 当前在售商品与报价，供小程序下单页使用。
+ */
+async function products(openid) {
+  await c.requireStaff(openid)
+  const rows = await c.fetchAll('products', { on: true })
+  rows.sort(function (a, b) { return a._id > b._id ? 1 : -1 })
+  return c.ok(rows.map(function (p) {
+    return {
+      productId: p._id,
+      name: p.name,
+      category: p.category,
+      categoryName: p.categoryName,
+      spec: p.spec,
+      unit: p.unit,
+      price: p.price,
+      prevPrice: p.prevPrice,
+      boxSize: p.boxSize
+    }
+  }))
+}
+
+/**
+ * 接口：myOrders
+ * 入参 { status?, limit? }
+ * 只返回当前账号所属园所的订单。
+ */
+async function myOrders(openid, event) {
+  const staff = await c.requireStaff(openid)
+  if (!staff.gardenKey) throw new c.ApiError(403, '当前账号未关联园所')
+
+  const where = { gardenKey: staff.gardenKey }
+  const status = String(event.status || '').trim()
+  if (status && status !== '全部') where.status = status
+
+  const rows = await c.fetchAll('orders', where)
+  rows.sort(function (a, b) {
+    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+  })
+
+  const limit = Math.min(Math.max(Number(event.limit) || 20, 1), 50)
+  return c.ok({
+    orders: rows.slice(0, limit).map(function (o) {
+      return {
+        orderId: o._id,
+        orderNo: o.orderNo,
+        date: o.date,
+        status: o.status,
+        amount: o.amount,
+        itemCount: o.itemCount,
+        remark: o.remark || '',
+        createdAt: o.createdAt,
+        items: (o.items || []).map(function (it) {
+          return {
+            productId: it.productId,
+            name: it.name,
+            unit: it.unit,
+            qty: it.qty,
+            price: it.price,
+            amount: it.amount
+          }
+        })
+      }
+    })
+  })
+}
+
 const handlers = {
   login: login,
   bindApply: bindApply,
+  products: products,
   submitOrder: submitOrder,
+  myOrders: myOrders,
   dailySummary: dailySummary
 }
 

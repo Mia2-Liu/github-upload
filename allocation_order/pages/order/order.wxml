@@ -1,0 +1,37 @@
+<view class="cats">
+  <view wx:for="{{categories}}" wx:key="key"
+        class="cat {{cat === item.key ? 'on' : ''}}"
+        data-key="{{item.key}}" bindtap="switchCat">{{item.name}}</view>
+</view>
+
+<view class="repeat-bar">
+  <text class="note">明天 {{dateText}} · 16:00 截单</text>
+  <text class="btn-mini" bindtap="copyLast">复制上次订单</text>
+</view>
+
+<view wx:for="{{shown}}" wx:key="productId" class="p-item">
+  <view class="p-thumb">{{item.emoji}}</view>
+  <view class="p-info">
+    <view class="n">{{item.name}}</view>
+    <view class="s">{{item.spec}}</view>
+    <view class="pr">{{item.priceText}}<text class="unit">元/{{item.unit}}</text></view>
+  </view>
+  <view class="step">
+    <view wx:if="{{cart[item.productId]}}"
+          class="minus" data-id="{{item.productId}}" data-delta="-1" bindtap="changeQty">−</view>
+    <view wx:if="{{cart[item.productId]}}" class="q">{{cart[item.productId]}}</view>
+    <view class="plus" data-id="{{item.productId}}" data-delta="1" bindtap="changeQty">＋</view>
+  </view>
+</view>
+
+<view class="empty" wx:if="{{!shown.length}}">暂无在售商品，请联系业务员</view>
+
+<view class="cart-space"></view>
+
+<view class="cartbar">
+  <view class="sum">
+    <view class="amt">¥{{totalText}}</view>
+    <view class="cnt">共 {{count}} 件</view>
+  </view>
+  <view class="submit {{count ? '' : 'disabled'}}" bindtap="submit">提交订单</view>
+</view>

@@ -1,0 +1,41 @@
+.me-wrap { padding-top: 28rpx; }
+
+.me-card {
+  margin: 0 28rpx;
+  padding: 36rpx 32rpx;
+  background: #fff;
+  border-radius: 28rpx;
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+.me-avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-size: 36rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.me-name { font-size: 32rpx; font-weight: 600; }
+.me-sub { font-size: 24rpx; color: var(--muted); margin-top: 4rpx; }
+
+.tip-line {
+  padding: 0 28rpx 14rpx;
+  font-size: 24rpx;
+  color: var(--muted);
+}
+
+.danger { color: #D93B30; }
+.arrow { color: #B9B9C4; font-size: 32rpx; }
+
+.version {
+  margin-top: 60rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: #B9B9C4;
+}
