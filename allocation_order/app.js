@@ -1,5 +1,5 @@
-// 云开发环境 ID：只有一个环境时可留空，用默认环境；多环境时填上，例如 'prod-1x2y3z'
-const CLOUD_ENV = ''
+// 云开发环境 ID
+const CLOUD_ENV = 'cloud1-d6gd9w5q1c66d7a55'
 
 App({
   globalData: {

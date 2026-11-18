@@ -23,6 +23,7 @@ function call(action, data) {
         reject(err)
       },
       fail: function (e) {
+        console.error('[api] callFunction fail:', action, e)
         const err = new Error('网络异常，请稍后重试')
         err.code = -1
         err.raw = e

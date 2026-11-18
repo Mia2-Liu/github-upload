@@ -1,0 +1,16 @@
+{
+  "description": "鲜达配送 · 根配置（小程序 + 云函数在同一仓库）",
+  "cloudfunctionRoot": "allocation_server/cloudfunctions/",
+  "miniprogramRoot": "allocation_order/",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true
+  },
+  "compileType": "miniprogram",
+  "libVersion": "3.4.0",
+  "appid": "wx199c405de12da413",
+  "projectname": "allocation-order"
+}

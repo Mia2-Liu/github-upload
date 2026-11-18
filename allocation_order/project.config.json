@@ -1,5 +1,7 @@
 {
   "description": "鲜达配送 · 幼儿园端",
+  "cloudfunctionRoot": "../allocation_server/cloudfunctions/",
+  "miniprogramRoot": "./",
   "packOptions": {
     "ignore": [
       { "type": "file", "value": "miniapp.html" },
@@ -15,6 +17,6 @@
   },
   "compileType": "miniprogram",
   "libVersion": "3.4.0",
-  "appid": "",
+  "appid": "wx199c405de12da413",
   "projectname": "allocation-order"
 }

@@ -1,7 +1,7 @@
 /* 管理后台：匿名登录云开发 + 口令换 token + 审批/汇总 */
 (function () {
   // 云开发环境 ID，和云函数所在环境一致；留空时页面会要求手动填写
-  var ENV_ID = ''
+  var ENV_ID = 'cloud1-d6gd9w5q1c66d7a55'
 
   var TOKEN_KEY = 'xd_admin_token'
   var ENV_KEY = 'xd_admin_env'
