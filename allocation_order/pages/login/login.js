@@ -57,6 +57,9 @@ Page({
     this.setData({ loading: true })
     wx.showLoading({ title: '登录中', mask: true })
 
+    // 强制清掉旧身份缓存，避免切换手机号时沿用旧 staff
+    app.clearAuth()
+
     try {
       const data = await api.call('login', payload)
       wx.hideLoading()

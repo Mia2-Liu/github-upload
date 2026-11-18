@@ -39,6 +39,14 @@ async function login(openid, event) {
 
   let staff = await c.getStaff(openid)
 
+  // 同一个 openid 但手机号不匹配（测试场景常见），清掉旧记录重新走匹配
+  if (staff && staff.phone !== phone) {
+    try {
+      await db.collection('staff').doc(staff._id).update({ data: { active: false } })
+    } catch (e) {}
+    staff = null
+  }
+
   // 1. 管理员（后台账号）白名单
   if (!staff) {
     const ar = await db.collection('admins').where({ phone, active: true }).limit(1).get()
