@@ -15,6 +15,14 @@ Page({
 
   onShow() {
     if (!app.requireLogin()) return
+
+    // 管理员进小程序直接到管理页，不展示园所下单界面
+    const current = app.globalData.staff || {}
+    if (current.role === 'admin') {
+      wx.redirectTo({ url: '/pages/admin/admin' })
+      return
+    }
+
     this.setData({
       staff: app.globalData.staff || {},
       garden: app.globalData.garden || {}

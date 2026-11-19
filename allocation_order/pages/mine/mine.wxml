@@ -2,12 +2,25 @@
   <view class="me-card">
     <view class="me-avatar">{{avatarText}}</view>
     <view class="me-info">
-      <view class="me-name">{{garden.name}}</view>
+      <view class="me-name">{{staff.role === 'admin' ? '管理员' : garden.name}}</view>
       <view class="me-sub">{{staff.name || '老师'}} · {{phoneText}}</view>
     </view>
   </view>
 
-  <view class="sec">
+  <view class="sec" wx:if="{{staff.role === 'admin'}}">
+    <view class="row-item" bindtap="goAdmin">
+      <text class="row-main">管理员中心</text>
+      <text class="arrow">›</text>
+    </view>
+  </view>
+
+  <view class="sec" wx:if="{{staff.role === 'admin'}}">
+    <view class="sec-title">管理员说明</view>
+    <view class="tip-line">· 待审批：老师提交的园所绑定申请</view>
+    <view class="tip-line">· 明日汇总：按订单汇总，用于采购和分拣</view>
+  </view>
+
+  <view class="sec" wx:if="{{staff.role !== 'admin'}}">
     <view class="sec-title">园所信息</view>
     <view class="row-item">
       <text class="row-main muted">园所码</text>

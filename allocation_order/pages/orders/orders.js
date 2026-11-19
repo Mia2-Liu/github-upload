@@ -14,6 +14,12 @@ Page({
 
   onShow() {
     if (!app.requireLogin()) return
+    const staff = app.globalData.staff || {}
+    if (staff.role === 'admin') {
+      wx.showToast({ title: '管理员请用管理端', icon: 'none' })
+      wx.switchTab({ url: '/pages/home/home' })
+      return
+    }
     this.load()
   },
 

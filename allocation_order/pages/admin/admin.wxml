@@ -1,0 +1,86 @@
+<view class="admin-tabs">
+  <view class="admin-tab {{tab === 'pending' ? 'on' : ''}}" data-tab="pending" bindtap="switchTab">
+    待审批<text class="badge" wx:if="{{requests.length}}">{{requests.length}}</text>
+  </view>
+  <view class="admin-tab {{tab === 'summary' ? 'on' : ''}}" data-tab="summary" bindtap="switchTab">
+    明日汇总
+  </view>
+</view>
+
+<!-- 待审批 -->
+<block wx:if="{{tab === 'pending'}}">
+  <view wx:for="{{requests}}" wx:key="requestId" class="req-card">
+    <view class="req-top">
+      <text class="req-name">{{item.name}}</text>
+      <text class="tag amber">待审批</text>
+    </view>
+    <view class="req-line">手机号：{{item.phoneText}}</view>
+    <view class="req-line">申请园所：{{item.gardenName}}（{{item.gardenKey}}）</view>
+    <view class="req-line muted">提交时间：{{item.timeText}}</view>
+    <view class="req-actions">
+      <view class="btn-reject" data-id="{{item.requestId}}" data-approve="0" bindtap="review">拒绝</view>
+      <view class="btn-approve" data-id="{{item.requestId}}" data-approve="1" bindtap="review">通过</view>
+    </view>
+  </view>
+  <view class="empty" wx:if="{{!requests.length}}">暂无待审批申请</view>
+</block>
+
+<!-- 明日汇总 -->
+<block wx:if="{{tab === 'summary'}}">
+  <view class="sum-head">
+    <text class="sum-date">明天 {{summaryDateText}}</text>
+    <text class="sum-sub">按订单实收汇总</text>
+  </view>
+
+  <view class="stat-grid">
+    <view class="stat">
+      <view class="v">{{totals.orderCount}}</view>
+      <view class="l">订单数</view>
+    </view>
+    <view class="stat">
+      <view class="v">{{totals.gardenCount}}</view>
+      <view class="l">下单园所</view>
+    </view>
+    <view class="stat">
+      <view class="v">{{totals.itemCount}}</view>
+      <view class="l">品类数</view>
+    </view>
+    <view class="stat">
+      <view class="v">{{totals.amountText}}</view>
+      <view class="l">金额（元）</view>
+    </view>
+  </view>
+
+  <view class="sec">
+    <view class="sec-title">
+      <text>汇总清单</text>
+      <text class="sub">按数量排序</text>
+    </view>
+    <view class="row-item" wx:for="{{products}}" wx:key="productId">
+      <view class="row-main">
+        <view class="n">{{item.name}}</view>
+        <view class="s">{{item.gardenCount}} 家订购</view>
+      </view>
+      <view class="row-val">
+        <view class="n">{{item.qtyText}}</view>
+        <view class="s">{{item.amountText}} 元</view>
+      </view>
+    </view>
+    <view class="empty" wx:if="{{!products.length}}">明天还没有园所下单</view>
+  </view>
+
+  <view class="sec" wx:if="{{missing.length}}">
+    <view class="sec-title">
+      <text>未下单园所</text>
+      <text class="sub">{{missing.length}} 家</text>
+    </view>
+    <view class="row-item" wx:for="{{missing}}" wx:key="gardenKey">
+      <view class="row-main">
+        <view class="n">{{item.gardenName}}</view>
+        <view class="s">{{item.route || item.gardenKey}}</view>
+      </view>
+    </view>
+  </view>
+</block>
+
+<view class="footer-space"></view>

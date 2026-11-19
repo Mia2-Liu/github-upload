@@ -21,6 +21,10 @@ Page({
     })
   },
 
+  goAdmin() {
+    wx.navigateTo({ url: '/pages/admin/admin' })
+  },
+
   logout() {
     wx.showModal({
       title: '退出登录',

@@ -4,6 +4,7 @@
     "pages/order/order",
     "pages/orders/orders",
     "pages/mine/mine",
+    "pages/admin/admin",
     "pages/login/login"
   ],
   "window": {

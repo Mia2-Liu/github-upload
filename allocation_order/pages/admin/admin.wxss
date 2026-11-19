@@ -1,0 +1,92 @@
+.admin-tabs {
+  display: flex;
+  gap: 8rpx;
+  padding: 20rpx 28rpx;
+  background: #fff;
+  border-bottom: 1rpx solid var(--line);
+}
+.admin-tab {
+  flex: 1;
+  text-align: center;
+  padding: 14rpx 0;
+  border-radius: 14rpx;
+  font-size: 28rpx;
+  color: var(--muted);
+  background: #F4F5F8;
+}
+.admin-tab.on {
+  background: var(--brand);
+  color: #fff;
+  font-weight: 600;
+}
+.badge {
+  display: inline-block;
+  min-width: 32rpx;
+  padding: 0 8rpx;
+  margin-left: 8rpx;
+  border-radius: 999rpx;
+  background: #FF5A5A;
+  color: #fff;
+  font-size: 20rpx;
+  line-height: 32rpx;
+}
+
+.req-card {
+  margin: 20rpx 28rpx 0;
+  padding: 26rpx 28rpx;
+  background: #fff;
+  border-radius: 24rpx;
+}
+.req-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+.req-name { font-size: 30rpx; font-weight: 600; }
+.req-line { font-size: 25rpx; color: #4A4A55; margin-top: 6rpx; }
+.req-actions {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 22rpx;
+}
+.btn-reject, .btn-approve {
+  flex: 1;
+  text-align: center;
+  padding: 18rpx 0;
+  border-radius: 14rpx;
+  font-size: 28rpx;
+}
+.btn-reject {
+  background: #fff;
+  color: #7A7A86;
+  border: 1rpx solid var(--line);
+}
+.btn-approve {
+  background: var(--brand);
+  color: #fff;
+  font-weight: 600;
+}
+
+.sum-head {
+  padding: 28rpx 28rpx 0;
+}
+.sum-date { font-size: 32rpx; font-weight: 600; }
+.sum-sub { display: block; font-size: 24rpx; color: var(--muted); margin-top: 4rpx; }
+
+.stat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  padding: 24rpx 28rpx 0;
+}
+.stat {
+  flex: 1 1 40%;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 24rpx;
+}
+.stat .v { font-size: 36rpx; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat .l { font-size: 23rpx; color: var(--muted); margin-top: 4rpx; }
+
+.row-val .n { font-size: 28rpx; font-weight: 600; font-variant-numeric: tabular-nums; }
