@@ -807,6 +807,88 @@ async function updateProduct(openid, event) {
   return c.ok({ productId, name: p.name, from: oldPrice, to: price })
 }
 
+/**
+ * 接口：createProduct
+ * 新增食材。productId 自动按 P013、P014… 往后排。
+ */
+async function createProduct(openid, event) {
+  const admin = await c.requireAdmin(openid, event)
+  const name = String(event.name || '').trim().slice(0, 30)
+  const category = String(event.category || '').trim()
+  const categoryName = String(event.categoryName || '').trim() || category
+  const unit = String(event.unit || '').trim().slice(0, 10)
+  const spec = String(event.spec || '').trim().slice(0, 60)
+  const boxSize = Math.max(1, Math.min(9999, Math.floor(Number(event.boxSize) || 1)))
+  const price = c.round2(Number(event.price))
+  if (!name) throw new c.ApiError(400, '请填写商品名称')
+  if (!['veg', 'baby', 'meat', 'other'].includes(category)) throw new c.ApiError(400, '分类无效')
+  if (!unit) throw new c.ApiError(400, '请填写单位，如 斤 / 袋')
+  if (!isFinite(price) || price <= 0) throw new c.ApiError(400, '价格必须大于 0')
+
+  // 生成下一个 productId
+  const all = await c.fetchAll('products')
+  let maxNum = 0
+  all.forEach(function (p) {
+    const m = /^P(\d{3})$/.exec(p._id)
+    if (m) { const n = Number(m[1]); if (n > maxNum) maxNum = n }
+  })
+  const productId = 'P' + String(maxNum + 1).padStart(3, '0')
+
+  const doc = {
+    _id: productId,
+    name, category, categoryName, spec, unit,
+    price, prevPrice: price, boxSize, on: true
+  }
+  await db.collection('products').add({ data: doc })
+  await c.addLog(openid, admin.name || '管理员', 'product.create', doc)
+  return c.ok({ productId, name, price })
+}
+
+/**
+ * 接口：editProduct
+ * 编辑商品信息（名称 / 分类 / 规格 / 单位 / 箱规）。
+ * 价格走 updateProduct 单独接口，防误操作。
+ */
+async function editProduct(openid, event) {
+  const admin = await c.requireAdmin(openid, event)
+  const productId = String(event.productId || '').trim()
+  if (!productId) throw new c.ApiError(400, '缺少商品 ID')
+
+  let p = null
+  try { const r = await db.collection('products').doc(productId).get(); p = r.data || null } catch (e) { p = null }
+  if (!p) throw new c.ApiError(404, '商品不存在')
+
+  const patch = {}
+  if ('name' in event) {
+    const v = String(event.name || '').trim().slice(0, 30)
+    if (!v) throw new c.ApiError(400, '名称不能为空')
+    if (v !== p.name) patch.name = v
+  }
+  if ('category' in event) {
+    const v = String(event.category || '').trim()
+    if (!['veg', 'baby', 'meat', 'other'].includes(v)) throw new c.ApiError(400, '分类无效')
+    if (v !== p.category) { patch.category = v; patch.categoryName = String(event.categoryName || '').trim() || v }
+  }
+  if ('spec' in event) {
+    const v = String(event.spec || '').trim().slice(0, 60)
+    if (v !== (p.spec || '')) patch.spec = v
+  }
+  if ('unit' in event) {
+    const v = String(event.unit || '').trim().slice(0, 10)
+    if (!v) throw new c.ApiError(400, '单位不能为空')
+    if (v !== p.unit) patch.unit = v
+  }
+  if ('boxSize' in event) {
+    const v = Math.max(1, Math.min(9999, Math.floor(Number(event.boxSize) || 1)))
+    if (v !== (p.boxSize || 1)) patch.boxSize = v
+  }
+
+  if (!Object.keys(patch).length) return c.ok({ productId })
+  await db.collection('products').doc(productId).update({ data: patch })
+  await c.addLog(openid, admin.name || '管理员', 'product.edit', { productId, patch })
+  return c.ok({ productId, patch })
+}
+
 const handlers = {
   adminLogin: adminLogin,
   bindRequests: bindRequests,
@@ -821,7 +903,9 @@ const handlers = {
   updateOrderStatus: updateOrderStatus,
   adminProducts: adminProducts,
   toggleProduct: toggleProduct,
-  updateProduct: updateProduct
+  updateProduct: updateProduct,
+  createProduct: createProduct,
+  editProduct: editProduct
 }
 
 exports.main = async function (event, context) {

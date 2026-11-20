@@ -157,10 +157,14 @@
 
 <!-- 商品维护 -->
 <block wx:if="{{tab === 'products'}}">
+  <view class="prod-toolbar">
+    <view class="prod-tool-hint">共 {{products.length}} 类</view>
+    <view class="btn-add-prod" bindtap="openNewProduct">＋ 新增食材</view>
+  </view>
   <view wx:for="{{products}}" wx:for-item="cat" wx:for-index="idx" wx:key="catName" class="prod-cat">
     <view class="prod-cat-head">{{cat.catName}}</view>
     <view wx:for="{{cat.items}}" wx:for-item="p" wx:key="productId" class="prod-row prod-row-{{p.on ? 'on' : 'off'}}">
-      <view class="prod-main">
+      <view class="prod-main" bindtap="openEditProduct" data-id="{{p.productId}}">
         <view class="prod-name">{{p.name}}<text class="prod-spec">{{p.spec}}</text></view>
         <view class="prod-price-row">
           <text class="prod-price">¥{{p.price}}</text>
@@ -169,7 +173,7 @@
         </view>
       </view>
       <view class="prod-actions">
-        <view class="btn-edit-price" data-id="{{p.productId}}" data-name="{{p.name}}" data-price="{{p.price}}" bindtap="editPrice">改价</view>
+        <view class="btn-edit" data-id="{{p.productId}}" data-name="{{p.name}}" data-price="{{p.price}}" bindtap="editPrice">改价</view>
         <view class="btn-toggle {{p.on ? 'btn-off' : 'btn-on'}}"
               data-id="{{p.productId}}" data-name="{{p.name}}" data-on="{{p.on}}"
               bindtap="toggleProduct">{{p.on ? '下架' : '上架'}}</view>
@@ -178,5 +182,45 @@
   </view>
   <view class="empty" wx:if="{{!products.length}}">商品列表为空</view>
 </block>
+
+<!-- 新增 / 编辑弹窗 -->
+<view class="modal-mask" wx:if="{{modal.show}}" bindtap="closeModal"></view>
+<view class="modal {{modal.show ? 'on' : ''}}" catchtap="">
+  <view class="modal-title">{{modal.isEdit ? '编辑食材' : '新增食材'}}</view>
+  <view class="modal-fields">
+    <view class="mf">
+      <text class="mf-l">名称 *</text>
+      <input class="mf-i" value="{{modal.form.name}}" placeholder="如 土豆" data-k="name" bindinput="onModalInput" />
+    </view>
+    <view class="mf">
+      <text class="mf-l">分类 *</text>
+      <picker bindchange="onCatChange" value="{{modal.catIdx}}" range="{{modal.catLabels}}">
+        <view class="mf-picker">{{modal.catLabel}} ›</view>
+      </picker>
+    </view>
+    <view class="mf">
+      <text class="mf-l">规格</text>
+      <input class="mf-i" value="{{modal.form.spec}}" placeholder="如 本地中号 · 1箱=40斤" data-k="spec" bindinput="onModalInput" />
+    </view>
+    <view class="mf-row">
+      <view class="mf mf-3">
+        <text class="mf-l">单位 *</text>
+        <input class="mf-i" value="{{modal.form.unit}}" placeholder="斤" data-k="unit" bindinput="onModalInput" />
+      </view>
+      <view class="mf mf-3">
+        <text class="mf-l">箱规</text>
+        <input class="mf-i" value="{{modal.form.boxSize}}" type="number" placeholder="40" data-k="boxSize" bindinput="onModalInput" />
+      </view>
+      <view class="mf mf-3" wx:if="{{!modal.isEdit}}">
+        <text class="mf-l">价格 *</text>
+        <input class="mf-i" value="{{modal.form.price}}" type="digit" placeholder="3.20" data-k="price" bindinput="onModalInput" />
+      </view>
+    </view>
+  </view>
+  <view class="modal-actions">
+    <view class="modal-btn cancel" bindtap="closeModal">取消</view>
+    <view class="modal-btn ok" bindtap="saveModal">保存</view>
+  </view>
+</view>
 
 <view class="footer-space"></view>

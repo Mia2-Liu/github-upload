@@ -27,14 +27,26 @@ Page({
     // 汇总
     sumDate: '',
     sumDateText: '',
-    sumView: 'total',        // total | garden | missing
+    sumView: 'total',
     totals: { orderCount: 0, gardenCount: 0, amountText: '0.00', itemCount: 0 },
     byProduct: [],
     byGarden: [],
     missingGardens: [],
 
     // 商品维护
-    products: []
+    products: [],
+
+    // 弹窗
+    modal: {
+      show: false,
+      isEdit: false,
+      productId: '',
+      catIdx: 0,
+      catLabel: '',
+      catLabels: ['蔬菜瓜果', '辅食', '肉禽蛋', '干货其他'],
+      catCodes: ['veg', 'baby', 'meat', 'other'],
+      form: { name: '', category: 'veg', categoryName: '蔬菜瓜果', spec: '', unit: '', boxSize: '', price: '' }
+    }
   },
 
   onShow() {
@@ -345,6 +357,115 @@ Page({
     } catch (err) {
       wx.hideLoading()
       api.toast(err)
+    }
+  },
+
+  openNewProduct() {
+    this.setData({
+      'modal.show': true,
+      'modal.isEdit': false,
+      'modal.productId': '',
+      'modal.catIdx': 0,
+      'modal.catLabel': '蔬菜瓜果',
+      'modal.form': { name: '', category: 'veg', categoryName: '蔬菜瓜果', spec: '', unit: '斤', boxSize: '40', price: '' }
+    })
+  },
+
+  openEditProduct(e) {
+    const id = e.currentTarget.dataset.id
+    // 从当前 products 列表里找到这条
+    let found = null
+    const cats = this.data.products
+    for (let i = 0; i < cats.length; i++) {
+      for (let j = 0; j < cats[i].items.length; j++) {
+        if (cats[i].items[j].productId === id) { found = cats[i].items[j]; break }
+      }
+      if (found) break
+    }
+    if (!found) return
+    const idx = ['veg', 'baby', 'meat', 'other'].indexOf(found.category || 'veg')
+    this.setData({
+      'modal.show': true,
+      'modal.isEdit': true,
+      'modal.productId': found.productId,
+      'modal.catIdx': idx < 0 ? 0 : idx,
+      'modal.catLabel': found.categoryName || '蔬菜瓜果',
+      'modal.form': {
+        name: found.name || '',
+        category: found.category || 'veg',
+        categoryName: found.categoryName || '蔬菜瓜果',
+        spec: found.spec || '',
+        unit: found.unit || '',
+        boxSize: String(found.boxSize || ''),
+        price: String(found.price || '')
+      }
+    })
+  },
+
+  closeModal() {
+    this.setData({ 'modal.show': false })
+  },
+
+  onModalInput(e) {
+    const key = e.currentTarget.dataset.k
+    this.setData({ ['modal.form.' + key]: e.detail.value })
+  },
+
+  onCatChange(e) {
+    const idx = Number(e.detail.value)
+    const label = this.data.modal.catLabels[idx]
+    const code = this.data.modal.catCodes[idx]
+    this.setData({
+      'modal.catIdx': idx,
+      'modal.catLabel': label,
+      'modal.form.category': code,
+      'modal.form.categoryName': label
+    })
+  },
+
+  async saveModal() {
+    const f = this.data.modal.form
+    if (!f.name) { wx.showToast({ title: '请填名称', icon: 'none' }); return }
+    if (!f.unit) { wx.showToast({ title: '请填单位', icon: 'none' }); return }
+
+    if (this.data.modal.isEdit) {
+      // 编辑
+      wx.showLoading({ title: '保存中', mask: true })
+      try {
+        await api.call('editProduct', {
+          productId: this.data.modal.productId,
+          name: f.name,
+          category: f.category,
+          categoryName: f.categoryName,
+          spec: f.spec,
+          unit: f.unit,
+          boxSize: Number(f.boxSize) || 1
+        })
+        wx.hideLoading()
+        this.setData({ 'modal.show': false })
+        wx.showToast({ title: '已更新', icon: 'success' })
+        this.loadProducts()
+      } catch (err) { wx.hideLoading(); api.toast(err) }
+    } else {
+      // 新增
+      const price = Number(f.price)
+      if (!isFinite(price) || price <= 0) { wx.showToast({ title: '请填价格', icon: 'none' }); return }
+      wx.showLoading({ title: '保存中', mask: true })
+      try {
+        const res = await api.call('createProduct', {
+          name: f.name,
+          category: f.category,
+          categoryName: f.categoryName,
+          spec: f.spec,
+          unit: f.unit,
+          boxSize: Number(f.boxSize) || 1,
+          price: price
+        })
+        wx.hideLoading()
+        this.setData({ 'modal.show': false })
+        wx.showToast({ title: '已添加 ' + res.productId, icon: 'success' })
+        this.loadProducts()
+      } catch (err) { wx.hideLoading(); api.toast(err) }
     }
   },
 
