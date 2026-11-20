@@ -720,6 +720,93 @@ async function updateOrderStatus(openid, event) {
   return c.ok({ orderId, orderNo: order.orderNo, from: order.status, to: target })
 }
 
+/**
+ * 接口：adminProducts
+ * 管理员看全部商品（含已停售），用于维护报价和上下架。
+ */
+async function adminProducts(openid) {
+  await c.requireAdmin(openid)
+  const rows = await c.fetchAll('products')
+  rows.sort(function (a, b) {
+    const byCat = String(a.category || '').localeCompare(String(b.category || ''))
+    if (byCat !== 0) return byCat
+    return a._id > b._id ? 1 : -1
+  })
+  return c.ok(rows.map(function (p) {
+    return {
+      productId: p._id,
+      name: p.name,
+      category: p.category,
+      categoryName: p.categoryName,
+      spec: p.spec,
+      unit: p.unit,
+      price: p.price,
+      prevPrice: p.prevPrice,
+      boxSize: p.boxSize,
+      on: !!p.on
+    }
+  }))
+}
+
+/**
+ * 接口：toggleProduct
+ * 上架 / 下架切换。
+ */
+async function toggleProduct(openid, event) {
+  const admin = await c.requireAdmin(openid, event)
+  const productId = String(event.productId || '').trim()
+  if (!productId) throw new c.ApiError(400, '缺少商品 ID')
+
+  let p = null
+  try {
+    const r = await db.collection('products').doc(productId).get()
+    p = r.data || null
+  } catch (e) {
+    p = null
+  }
+  if (!p) throw new c.ApiError(404, '商品不存在')
+
+  const newOn = !p.on
+  await db.collection('products').doc(productId).update({ data: { on: newOn } })
+  await c.addLog(openid, admin.name || '管理员', 'product.toggle', { productId, name: p.name, on: newOn })
+
+  return c.ok({ productId, name: p.name, on: newOn })
+}
+
+/**
+ * 接口：updateProduct
+ * 改价：price 存进 prevPrice，新价写入 price，防丢失。
+ */
+async function updateProduct(openid, event) {
+  const admin = await c.requireAdmin(openid, event)
+  const productId = String(event.productId || '').trim()
+  if (!productId) throw new c.ApiError(400, '缺少商品 ID')
+
+  const price = c.round2(Number(event.price))
+  if (!isFinite(price) || price <= 0) throw new c.ApiError(400, '价格必须大于 0')
+  if (price > 9999) throw new c.ApiError(400, '价格过大')
+
+  let p = null
+  try {
+    const r = await db.collection('products').doc(productId).get()
+    p = r.data || null
+  } catch (e) {
+    p = null
+  }
+  if (!p) throw new c.ApiError(404, '商品不存在')
+  if (p.price === price) return c.ok({ productId, name: p.name, price })
+
+  const oldPrice = p.price
+  await db.collection('products').doc(productId).update({
+    data: { price, prevPrice: oldPrice }
+  })
+  await c.addLog(openid, admin.name || '管理员', 'product.price', {
+    productId, name: p.name, from: oldPrice, to: price
+  })
+
+  return c.ok({ productId, name: p.name, from: oldPrice, to: price })
+}
+
 const handlers = {
   adminLogin: adminLogin,
   bindRequests: bindRequests,
@@ -731,7 +818,10 @@ const handlers = {
   myOrders: myOrders,
   dailySummary: dailySummary,
   listOrders: listOrders,
-  updateOrderStatus: updateOrderStatus
+  updateOrderStatus: updateOrderStatus,
+  adminProducts: adminProducts,
+  toggleProduct: toggleProduct,
+  updateProduct: updateProduct
 }
 
 exports.main = async function (event, context) {
