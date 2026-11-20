@@ -5,6 +5,7 @@ const app = getApp()
 Page({
   data: {
     isAdmin: false,
+    staffName: '',
     tab: 'pending',
     loading: false,
     requests: [],
@@ -33,7 +34,7 @@ Page({
       return
     }
 
-    this.setData({ isAdmin: true })
+    this.setData({ isAdmin: true, staffName: staff.name || '管理员' })
     this.load()
   },
 
@@ -134,5 +135,17 @@ Page({
       wx.hideLoading()
       api.toast(err)
     }
+  },
+
+  logout() {
+    wx.showModal({
+      title: '退出登录',
+      content: '退出后需要重新授权手机号',
+      success: function (res) {
+        if (!res.confirm) return
+        app.clearAuth()
+        wx.reLaunch({ url: '/pages/login/login' })
+      }
+    })
   }
 })

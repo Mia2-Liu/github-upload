@@ -1,3 +1,11 @@
+<view class="admin-header">
+  <view class="admin-h-left">
+    <text class="admin-h-role">管理员</text>
+    <text class="admin-h-name">{{staffName || '王经理'}}</text>
+  </view>
+  <view class="admin-h-logout" bindtap="logout">退出登录</view>
+</view>
+
 <view class="admin-tabs">
   <view class="admin-tab {{tab === 'pending' ? 'on' : ''}}" data-tab="pending" bindtap="switchTab">
     待审批<text class="badge" wx:if="{{requests.length}}">{{requests.length}}</text>
