@@ -577,6 +577,146 @@ async function reviewBind(openid, event) {
   return c.ok({ requestId, status, phone: req.phone, gardenKey: req.gardenKey })
 }
 
+/**
+ * 订单状态流转顺序（简单线性）
+ * 已取消可恢复到待分拣，其它按顺序前进。
+ */
+const STATUS_FLOW = ['待分拣', '已分拣', '配送中', '已送达']
+const TERMINAL_STATUSES = ['已送达', '已取消']
+
+function nextStatusOf(from) {
+  const i = STATUS_FLOW.indexOf(from)
+  if (i === -1) return ''
+  if (i + 1 >= STATUS_FLOW.length) return ''
+  return STATUS_FLOW[i + 1]
+}
+
+/**
+ * 接口：listOrders
+ * 入参 { date?: 'YYYY-MM-DD', status? }
+ * 管理员按日期看全部订单，按园所分组。
+ */
+async function listOrders(openid, event) {
+  const admin = await c.requireAdmin(openid, event)
+  const date = c.normalizeDate(event.date) || c.cstDate(1)
+  if (!date) throw new c.ApiError(400, '日期格式应为 YYYY-MM-DD')
+
+  const where = { date }
+  const status = String(event.status || '').trim()
+  if (status && status !== '全部') where.status = status
+
+  const rows = await c.fetchAll('orders', where)
+  rows.sort(function (a, b) {
+    const byGarden = String(a.gardenKey).localeCompare(String(b.gardenKey))
+    if (byGarden !== 0) return byGarden
+    return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
+  })
+
+  // 按园所分组
+  const gardenMap = new Map()
+  rows.forEach(function (o) {
+    let g = gardenMap.get(o.gardenKey)
+    if (!g) {
+      g = { gardenKey: o.gardenKey, gardenName: o.gardenName, orders: [] }
+      gardenMap.set(o.gardenKey, g)
+    }
+    g.orders.push({
+      orderId: o._id,
+      orderNo: o.orderNo,
+      date: o.date,
+      gardenKey: o.gardenKey,
+      gardenName: o.gardenName,
+      status: o.status,
+      amount: o.amount,
+      itemCount: o.itemCount,
+      remark: o.remark || '',
+      createdAt: o.createdAt,
+      nextStatus: nextStatusOf(o.status),
+      canCancel: !TERMINAL_STATUSES.includes(o.status) && o.status !== '已取消',
+      canRestore: o.status === '已取消',
+      createdBy: (o.createdBy && (o.createdBy.name || o.createdBy.phone)) || '',
+      items: (o.items || []).map(function (it) {
+        return { productId: it.productId, name: it.name, unit: it.unit, qty: it.qty, price: it.price, amount: it.amount }
+      })
+    })
+  })
+
+  const groups = Array.from(gardenMap.values())
+  const totalAmount = c.round2(rows.reduce(function (s, o) { return s + (o.amount || 0) }, 0))
+
+  return c.ok({
+    date,
+    orderCount: rows.length,
+    gardenCount: groups.length,
+    totalAmount,
+    groups
+  })
+}
+
+/**
+ * 接口：updateOrderStatus
+ * 入参 { orderId, to?: string, direction?: 'next'|'cancel'|'restore', note? }
+ * direction 不传时用 to 的值；两者都有以 to 为准。
+ */
+async function updateOrderStatus(openid, event) {
+  const admin = await c.requireAdmin(openid, event)
+  const orderId = String(event.orderId || '').trim()
+  if (!orderId) throw new c.ApiError(400, '缺少订单号')
+
+  let order = null
+  try {
+    const r = await db.collection('orders').doc(orderId).get()
+    order = r.data || null
+  } catch (e) {
+    order = null
+  }
+  if (!order) throw new c.ApiError(404, '订单不存在')
+
+  let target = String(event.to || '').trim()
+  const direction = String(event.direction || '').trim()
+
+  if (!target) {
+    if (direction === 'next') target = nextStatusOf(order.status)
+    else if (direction === 'cancel') target = '已取消'
+    else if (direction === 'restore') target = '待分拣'
+  }
+  if (!target) throw new c.ApiError(400, '目标状态不明确')
+
+  // 合法性校验
+  if (target === '已取消') {
+    if (TERMINAL_STATUSES.includes(order.status)) throw new c.ApiError(400, '订单已终结，无法取消')
+  } else if (target === '待分拣') {
+    if (order.status !== '已取消') throw new c.ApiError(400, '仅已取消订单可恢复')
+  } else {
+    // 正常流转：必须按顺序
+    const expected = nextStatusOf(order.status)
+    if (!expected || target !== expected) {
+      throw new c.ApiError(400, '状态流转不合法：' + order.status + ' → ' + target)
+    }
+  }
+
+  const now = new Date()
+  const note = String(event.note || '').trim().slice(0, 200)
+  const newLog = {
+    at: now,
+    by: admin.name || '管理员',
+    from: order.status,
+    to: target,
+    note: note || ('管理员操作 ' + order.status + ' → ' + target)
+  }
+  const logs = (order.logs || []).concat([newLog])
+
+  await db.collection('orders').doc(orderId).update({
+    data: { status: target, updatedAt: now, logs }
+  })
+
+  await c.addLog(openid, admin.name || '管理员', 'order.status', {
+    orderId, orderNo: order.orderNo, from: order.status, to: target, note
+  })
+
+  return c.ok({ orderId, orderNo: order.orderNo, from: order.status, to: target })
+}
+
 const handlers = {
   adminLogin: adminLogin,
   bindRequests: bindRequests,
@@ -586,7 +726,9 @@ const handlers = {
   products: products,
   submitOrder: submitOrder,
   myOrders: myOrders,
-  dailySummary: dailySummary
+  dailySummary: dailySummary,
+  listOrders: listOrders,
+  updateOrderStatus: updateOrderStatus
 }
 
 exports.main = async function (event, context) {

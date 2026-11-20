@@ -2,13 +2,27 @@ const api = require('../../utils/api')
 const fmt = require('../../utils/format')
 const app = getApp()
 
+function cstDate(offset) {
+  const d = new Date(Date.now() + (offset || 0) * 86400000)
+  return new Date(d.getTime() + 8 * 3600 * 1000).toISOString().slice(0, 10)
+}
+
 Page({
   data: {
     isAdmin: false,
     staffName: '',
     tab: 'pending',
     loading: false,
+
+    // 待审批
     requests: [],
+
+    // 今日订单
+    ordersDate: '',
+    ordersDateText: '',
+    orders: { orderCount: 0, gardenCount: 0, totalAmountText: '0.00', groups: [] },
+
+    // 汇总
     summaryDate: '',
     summaryDateText: '',
     totals: { orderCount: 0, gardenCount: 0, amountText: '0.00', itemCount: 0 },
@@ -34,7 +48,13 @@ Page({
       return
     }
 
-    this.setData({ isAdmin: true, staffName: staff.name || '管理员' })
+    const tomorrow = cstDate(1)
+    this.setData({
+      isAdmin: true,
+      staffName: staff.name || '管理员',
+      ordersDate: tomorrow,
+      ordersDateText: fmt.dateText(tomorrow)
+    })
     this.load()
   },
 
@@ -49,16 +69,19 @@ Page({
     this.load()
   },
 
+  onDateChange(e) {
+    const date = String(e.detail.value)
+    this.setData({ ordersDate: date, ordersDateText: fmt.dateText(date) })
+    this.loadOrders()
+  },
+
   async load(fromPull) {
     if (this.data.loading) return
     this.setData({ loading: true })
-
     try {
-      if (this.data.tab === 'pending') {
-        await this.loadPending()
-      } else {
-        await this.loadSummary()
-      }
+      if (this.data.tab === 'pending') await this.loadPending()
+      else if (this.data.tab === 'orders') await this.loadOrders()
+      else await this.loadSummary()
     } catch (err) {
       api.toast(err)
     } finally {
@@ -80,6 +103,41 @@ Page({
       }
     })
     this.setData({ requests: requests })
+  },
+
+  async loadOrders() {
+    const data = await api.call('listOrders', { date: this.data.ordersDate })
+    const groups = (data.groups || []).map(function (g) {
+      return {
+        gardenKey: g.gardenKey,
+        gardenName: g.gardenName,
+        orders: (g.orders || []).map(function (o) {
+          return {
+            orderId: o.orderId,
+            orderNo: o.orderNo,
+            status: o.status,
+            nextStatus: o.nextStatus,
+            canCancel: o.canCancel,
+            canRestore: o.canRestore,
+            amountText: Number(o.amount || 0).toFixed(2),
+            itemCount: o.itemCount,
+            createdBy: o.createdBy,
+            timeText: fmt.timeText(o.createdAt),
+            items: (o.items || []).map(function (it) {
+              return { productId: it.productId, name: it.name, unit: it.unit, qty: it.qty }
+            })
+          }
+        })
+      }
+    })
+    this.setData({
+      orders: {
+        orderCount: data.orderCount || 0,
+        gardenCount: data.gardenCount || 0,
+        totalAmountText: Number(data.totalAmount || 0).toFixed(2),
+        groups: groups
+      }
+    })
   },
 
   async loadSummary() {
@@ -131,6 +189,38 @@ Page({
       wx.hideLoading()
       wx.showToast({ title: approve ? '已通过' : '已拒绝', icon: 'success' })
       this.load()
+    } catch (err) {
+      wx.hideLoading()
+      api.toast(err)
+    }
+  },
+
+  updateStatus(e) {
+    const orderId = e.currentTarget.dataset.id
+    const direction = e.currentTarget.dataset.dir
+    const label = direction === 'next' ? ('推进到「' + e.currentTarget.dataset.label + '」')
+               : direction === 'cancel' ? '取消该订单'
+               : '恢复为待分拣'
+    const self = this
+
+    wx.showModal({
+      title: '确认操作',
+      content: label + '？',
+      confirmText: direction === 'cancel' ? '取消订单' : (direction === 'restore' ? '恢复' : '推进'),
+      success: function (res) {
+        if (!res.confirm) return
+        self.doUpdateStatus(orderId, direction)
+      }
+    })
+  },
+
+  async doUpdateStatus(orderId, direction) {
+    wx.showLoading({ title: '处理中', mask: true })
+    try {
+      await api.call('updateOrderStatus', { orderId: orderId, direction: direction })
+      wx.hideLoading()
+      wx.showToast({ title: '操作成功', icon: 'success' })
+      this.loadOrders()
     } catch (err) {
       wx.hideLoading()
       api.toast(err)

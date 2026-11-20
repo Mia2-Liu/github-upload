@@ -10,8 +10,11 @@
   <view class="admin-tab {{tab === 'pending' ? 'on' : ''}}" data-tab="pending" bindtap="switchTab">
     待审批<text class="badge" wx:if="{{requests.length}}">{{requests.length}}</text>
   </view>
+  <view class="admin-tab {{tab === 'orders' ? 'on' : ''}}" data-tab="orders" bindtap="switchTab">
+    今日订单
+  </view>
   <view class="admin-tab {{tab === 'summary' ? 'on' : ''}}" data-tab="summary" bindtap="switchTab">
-    明日汇总
+    汇总
   </view>
 </view>
 
@@ -33,7 +36,57 @@
   <view class="empty" wx:if="{{!requests.length}}">暂无待审批申请</view>
 </block>
 
-<!-- 明日汇总 -->
+<!-- 今日订单 -->
+<block wx:if="{{tab === 'orders'}}">
+  <view class="order-head">
+    <view class="order-date-row">
+      <text class="order-date-label">日期</text>
+      <picker mode="date" value="{{ordersDate}}" bindchange="onDateChange" start="2024-01-01" end="2030-12-31">
+        <view class="order-date-picker">{{ordersDateText}} ›</view>
+      </picker>
+    </view>
+    <view class="order-stats">
+      <text class="stat-item">{{orders.orderCount}} 笔</text>
+      <text class="stat-item">{{orders.gardenCount}} 家园所</text>
+      <text class="stat-item">¥{{orders.totalAmountText}}</text>
+    </view>
+  </view>
+
+  <view class="garden-group" wx:for="{{orders.groups}}" wx:for-item="g" wx:key="gardenKey">
+    <view class="garden-head">
+      <text class="garden-name">{{g.gardenName}}</text>
+      <text class="garden-key">{{g.gardenKey}} · {{g.orders.length}} 笔</text>
+    </view>
+
+    <view class="order-card" wx:for="{{g.orders}}" wx:for-item="o" wx:key="orderId">
+      <view class="order-top">
+        <view class="order-no">{{o.orderNo}}</view>
+        <text class="tag order-tag-{{o.status}}">{{o.status}}</text>
+      </view>
+      <view class="order-meta">
+        <text>下单人：{{o.createdBy || '—'}}</text>
+        <text>{{o.itemCount}} 个品 · ¥{{o.amountText}}</text>
+      </view>
+      <view class="order-meta muted">下单时间：{{o.timeText}}</view>
+
+      <view class="order-items">
+        <view class="order-item" wx:for="{{o.items}}" wx:for-item="it" wx:key="productId">
+          <text class="it-name">{{it.name}}</text>
+          <text class="it-qty">{{it.qty}}{{it.unit}}</text>
+        </view>
+      </view>
+
+      <view class="order-actions" wx:if="{{o.canCancel || o.canRestore || o.nextStatus}}">
+        <view wx:if="{{o.nextStatus}}" class="btn-next" data-id="{{o.orderId}}" data-dir="next" data-label="推进到 {{o.nextStatus}}" bindtap="updateStatus">{{o.nextStatus}}</view>
+        <view wx:if="{{o.canRestore}}" class="btn-restore" data-id="{{o.orderId}}" data-dir="restore" bindtap="updateStatus">恢复</view>
+        <view wx:if="{{o.canCancel}}" class="btn-cancel" data-id="{{o.orderId}}" data-dir="cancel" bindtap="updateStatus">取消</view>
+      </view>
+    </view>
+  </view>
+  <view class="empty" wx:if="{{!orders.groups.length}}">该日期还没有订单</view>
+</block>
+
+<!-- 汇总 -->
 <block wx:if="{{tab === 'summary'}}">
   <view class="sum-head">
     <text class="sum-date">明天 {{summaryDateText}}</text>

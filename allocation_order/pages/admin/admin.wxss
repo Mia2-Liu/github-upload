@@ -116,3 +116,116 @@
   border: 1rpx solid #FFD0D0;
   border-radius: 12rpx;
 }
+
+/* 今日订单 */
+.order-head {
+  padding: 24rpx 28rpx 8rpx;
+  background: #fff;
+  border-bottom: 1rpx solid var(--line);
+}
+.order-date-row { display: flex; align-items: center; gap: 12rpx; }
+.order-date-label { font-size: 26rpx; color: var(--muted); }
+.order-date-picker {
+  font-size: 28rpx;
+  font-weight: 600;
+  padding: 6rpx 18rpx;
+  background: var(--brand-soft);
+  color: var(--brand);
+  border-radius: 10rpx;
+}
+.order-stats {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 14rpx;
+  font-size: 26rpx;
+  color: #4A4A55;
+}
+.order-stats .stat-item { font-weight: 600; color: #1A1A22; }
+
+.garden-group { padding: 16rpx 28rpx 0; }
+.garden-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10rpx;
+  margin: 12rpx 4rpx;
+}
+.garden-name { font-size: 28rpx; font-weight: 600; color: #1A1A22; }
+.garden-key { font-size: 23rpx; color: var(--muted); }
+
+.order-card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 22rpx 24rpx;
+  margin-bottom: 16rpx;
+}
+.order-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.order-no {
+  font-size: 24rpx;
+  color: #1A1A22;
+  font-weight: 600;
+  font-family: Menlo, monospace;
+}
+.order-tag-待分拣 { background: #FFF3E0; color: #E65100; }
+.order-tag-已分拣 { background: #E3F2FD; color: #1565C0; }
+.order-tag-配送中 { background: #E8F5E9; color: #2E7D32; }
+.order-tag-已送达 { background: #ECEFF1; color: #455A64; }
+.order-tag-已取消 { background: #FFEBEE; color: #C62828; }
+
+.order-meta {
+  display: flex;
+  gap: 16rpx;
+  font-size: 24rpx;
+  color: #4A4A55;
+  margin-top: 8rpx;
+}
+.order-meta.muted { color: var(--muted); }
+
+.order-items {
+  margin-top: 14rpx;
+  padding-top: 14rpx;
+  border-top: 1rpx dashed var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx 20rpx;
+}
+.order-item {
+  font-size: 24rpx;
+  display: flex;
+  gap: 8rpx;
+  align-items: baseline;
+}
+.it-name { color: #4A4A55; }
+.it-qty { color: #1A1A22; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.order-actions {
+  display: flex;
+  gap: 14rpx;
+  margin-top: 16rpx;
+}
+.btn-next, .btn-cancel, .btn-restore {
+  padding: 12rpx 22rpx;
+  border-radius: 10rpx;
+  font-size: 24rpx;
+  text-align: center;
+  border: 1rpx solid transparent;
+}
+.btn-next {
+  background: var(--brand);
+  color: #fff;
+  font-weight: 600;
+  flex: 1;
+}
+.btn-cancel {
+  background: #fff;
+  color: #C62828;
+  border-color: #FFCDD2;
+}
+.btn-restore {
+  background: #fff;
+  color: #2E7D32;
+  border-color: #C8E6C9;
+}
