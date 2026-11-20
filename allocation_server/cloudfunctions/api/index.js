@@ -889,6 +889,142 @@ async function editProduct(openid, event) {
   return c.ok({ productId, patch })
 }
 
+/**
+ * 接口：adminGardens
+ * 列出全部园所（含完整 phones 数组），用于白名单维护。
+ */
+async function adminGardens(openid) {
+  await c.requireAdmin(openid)
+  const rows = await c.fetchAll('gardens')
+  rows.sort(function (a, b) { return a._id > b._id ? 1 : -1 })
+  return c.ok(rows.map(function (g) {
+    return {
+      gardenKey: g._id,
+      name: g.name,
+      contact: g.contact || '',
+      route: g.route || '',
+      settle: g.settle || '',
+      open: !!g.open,
+      phones: (g.phones || []).map(function (p) {
+        return { name: p.name || '', phone: p.phone, active: !!p.active }
+      })
+    }
+  }))
+}
+
+/**
+ * 接口：createGarden
+ * 新增园所，自动分配 GD-0009+ 号。
+ */
+async function createGarden(openid, event) {
+  const admin = await c.requireAdmin(openid, event)
+  const name = String(event.name || '').trim().slice(0, 40)
+  const contact = String(event.contact || '').trim().slice(0, 20)
+  const route = String(event.route || '').trim().slice(0, 40)
+  const settle = String(event.settle || '').trim().slice(0, 30) || '月结 · 按订单金额'
+  if (!name) throw new c.ApiError(400, '请填写园所名称')
+
+  const all = await c.fetchAll('gardens')
+  let maxNum = 0
+  all.forEach(function (g) {
+    const m = /^GD-(\d{4})$/.exec(g._id)
+    if (m) { const n = Number(m[1]); if (n > maxNum) maxNum = n }
+  })
+  const gardenKey = 'GD-' + String(maxNum + 1).padStart(4, '0')
+
+  const doc = {
+    _id: gardenKey, name, contact, route, settle, open: true,
+    phones: [], createdAt: new Date()
+  }
+  await db.collection('gardens').add({ data: doc })
+  await c.addLog(openid, admin.name || '管理员', 'garden.create', doc)
+  return c.ok({ gardenKey, name })
+}
+
+/**
+ * 接口：updateGarden
+ * 编辑园所基本信息（名称/联系人/线路/结算）。
+ */
+async function updateGarden(openid, event) {
+  const admin = await c.requireAdmin(openid, event)
+  const gardenKey = String(event.gardenKey || '').trim()
+  if (!/^GD-\d{4}$/.test(gardenKey)) throw new c.ApiError(400, '园所码格式错误')
+
+  let g = null
+  try { const r = await db.collection('gardens').doc(gardenKey).get(); g = r.data || null } catch (e) { g = null }
+  if (!g) throw new c.ApiError(404, '园所不存在')
+
+  const patch = {}
+  if ('name' in event) { const v = String(event.name || '').trim().slice(0, 40); if (!v) throw new c.ApiError(400, '名称不能为空'); if (v !== g.name) patch.name = v }
+  if ('contact' in event) { const v = String(event.contact || '').trim().slice(0, 20); if (v !== (g.contact || '')) patch.contact = v }
+  if ('route' in event) { const v = String(event.route || '').trim().slice(0, 40); if (v !== (g.route || '')) patch.route = v }
+  if ('settle' in event) { const v = String(event.settle || '').trim().slice(0, 30); if (v !== (g.settle || '')) patch.settle = v }
+  if ('open' in event) { const v = !!event.open; if (v !== !!g.open) patch.open = v }
+
+  if (!Object.keys(patch).length) return c.ok({ gardenKey })
+  await db.collection('gardens').doc(gardenKey).update({ data: patch })
+  await c.addLog(openid, admin.name || '管理员', 'garden.edit', { gardenKey, patch })
+  return c.ok({ gardenKey, patch })
+}
+
+/**
+ * 接口：addGardenPhone
+ * 给园所白名单加一个手机号。已存在则更新 name / active。
+ */
+async function addGardenPhone(openid, event) {
+  const admin = await c.requireAdmin(openid, event)
+  const gardenKey = String(event.gardenKey || '').trim()
+  const phone = c.normalizePhone(event.phone)
+  const name = String(event.name || '').trim().slice(0, 20)
+  if (!/^GD-\d{4}$/.test(gardenKey)) throw new c.ApiError(400, '园所码格式错误')
+  if (!c.isValidPhone(phone)) throw new c.ApiError(400, '手机号格式不正确')
+
+  let g = null
+  try { const r = await db.collection('gardens').doc(gardenKey).get(); g = r.data || null } catch (e) { g = null }
+  if (!g) throw new c.ApiError(404, '园所不存在')
+
+  const phones = Array.isArray(g.phones) ? g.phones.slice() : []
+  const idx = phones.findIndex(function (p) { return p.phone === phone })
+  let added = false
+  if (idx >= 0) {
+    phones[idx] = { phone, name: name || phones[idx].name || '', active: true }
+  } else {
+    phones.push({ phone, name, active: true })
+    added = true
+  }
+
+  await db.collection('gardens').doc(gardenKey).update({ data: { phones } })
+  await c.addLog(openid, admin.name || '管理员', added ? 'garden.phone.add' : 'garden.phone.update', {
+    gardenKey, phone, name
+  })
+  return c.ok({ gardenKey, phone, name, added: added })
+}
+
+/**
+ * 接口：removeGardenPhone
+ * 从白名单移除一个手机号（直接从数组里删掉，不是改 active，因为不会重新加回来）。
+ */
+async function removeGardenPhone(openid, event) {
+  const admin = await c.requireAdmin(openid, event)
+  const gardenKey = String(event.gardenKey || '').trim()
+  const phone = c.normalizePhone(event.phone)
+  if (!/^GD-\d{4}$/.test(gardenKey)) throw new c.ApiError(400, '园所码格式错误')
+  if (!c.isValidPhone(phone)) throw new c.ApiError(400, '手机号格式不正确')
+
+  let g = null
+  try { const r = await db.collection('gardens').doc(gardenKey).get(); g = r.data || null } catch (e) { g = null }
+  if (!g) throw new c.ApiError(404, '园所不存在')
+
+  const phones = (g.phones || []).filter(function (p) { return p.phone !== phone })
+  if (phones.length === (g.phones || []).length) {
+    throw new c.ApiError(404, '该手机号不在白名单里')
+  }
+
+  await db.collection('gardens').doc(gardenKey).update({ data: { phones } })
+  await c.addLog(openid, admin.name || '管理员', 'garden.phone.remove', { gardenKey, phone })
+  return c.ok({ gardenKey, phone })
+}
+
 const handlers = {
   adminLogin: adminLogin,
   bindRequests: bindRequests,
@@ -905,7 +1041,12 @@ const handlers = {
   toggleProduct: toggleProduct,
   updateProduct: updateProduct,
   createProduct: createProduct,
-  editProduct: editProduct
+  editProduct: editProduct,
+  adminGardens: adminGardens,
+  createGarden: createGarden,
+  updateGarden: updateGarden,
+  addGardenPhone: addGardenPhone,
+  removeGardenPhone: removeGardenPhone
 }
 
 exports.main = async function (event, context) {

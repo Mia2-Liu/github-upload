@@ -256,4 +256,38 @@ page { background: #F4F6F9; }
 .modal-btn.cancel { color: #6B7280; border-right: 1rpx solid #F3F4F6; }
 .modal-btn.ok { color: #059669; font-weight: 600; }
 
+/* 白名单 */
+.garden-card {
+  background: #fff; border-radius: 16rpx; padding: 24rpx; margin: 0 24rpx 16rpx;
+  border: 1rpx solid #E5E7EB;
+}
+.garden-card.garden-off { opacity: 0.55; }
+.garden-head { display: flex; justify-content: space-between; align-items: center; }
+.garden-head-l { display: flex; align-items: center; gap: 12rpx; flex: 1; min-width: 0; }
+.garden-key {
+  font-size: 22rpx; font-weight: 600; color: #059669;
+  background: #ECFDF5; padding: 4rpx 10rpx; border-radius: 6rpx; flex-shrink: 0;
+}
+.garden-name { font-size: 30rpx; font-weight: 600; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.garden-status { font-size: 22rpx; padding: 4rpx 12rpx; border-radius: 100rpx; flex-shrink: 0; }
+.garden-status.open { background: #E8F5E9; color: #2E7D32; }
+.garden-status.close { background: #FFEBEE; color: #C62828; }
+.garden-head-r {
+  font-size: 24rpx; color: #6B7280; padding: 8rpx 20rpx;
+  border: 1rpx solid #E5E7EB; border-radius: 100rpx; margin-left: 16rpx; flex-shrink: 0;
+}
+.garden-sub { font-size: 24rpx; color: #6B7280; margin-top: 8rpx; }
+
+.phone-section { margin-top: 20rpx; padding-top: 16rpx; border-top: 1rpx solid #F3F4F6; }
+.phone-section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12rpx; }
+.phone-section-head text { font-size: 24rpx; color: #374151; font-weight: 500; }
+.phone-add { color: #059669; font-weight: 500; }
+.phone-empty { font-size: 24rpx; color: #9CA3AF; padding: 16rpx 0; }
+.phone-row { display: flex; justify-content: space-between; align-items: center; padding: 14rpx 0; border-bottom: 1rpx solid #F9FAFB; }
+.phone-row:last-child { border-bottom: none; }
+.phone-info { display: flex; gap: 16rpx; align-items: center; }
+.phone-name { font-size: 26rpx; color: #374151; }
+.phone-num { font-size: 24rpx; color: #6B7280; font-family: monospace; }
+.phone-del { font-size: 24rpx; color: #DC2626; padding: 6rpx 16rpx; background: #FEF2F2; border-radius: 6rpx; }
+
 .footer-space { height: 60rpx; }

@@ -36,7 +36,16 @@ Page({
     // 商品维护
     products: [],
 
-    // 弹窗
+    // 白名单
+    gardens: [],
+
+    // 新增园所弹窗
+    gardenModal: { show: false, form: { name: '', contact: '', route: '', settle: '' } },
+
+    // 加手机号弹窗
+    phoneModal: { show: false, gardenKey: '', gardenName: '', form: { name: '', phone: '' } },
+
+    // 弹窗（商品新增/编辑）
     modal: {
       show: false,
       isEdit: false,
@@ -123,6 +132,7 @@ Page({
       else if (this.data.tab === 'orders') await this.loadOrders()
       else if (this.data.tab === 'summary') await this.loadSummary()
       else if (this.data.tab === 'products') await this.loadProducts()
+      else if (this.data.tab === 'gardens') await this.loadGardens()
     } catch (err) {
       api.toast(err)
     } finally {
@@ -234,6 +244,113 @@ Page({
     const cats = Object.keys(byCat).sort()
     this.setData({
       products: cats.map(function (k) { return byCat[k] })
+    })
+  },
+
+  // ===== 白名单 / 园所管理 =====
+
+  async loadGardens() {
+    const data = await api.call('adminGardens', {})
+    this.setData({ gardens: data || [] })
+  },
+
+  openNewGarden() {
+    this.setData({
+      'gardenModal.show': true,
+      'gardenModal.form': { name: '', contact: '', route: '', settle: '月结·按订单金额' }
+    })
+  },
+
+  closeGardenModal() {
+    this.setData({ 'gardenModal.show': false })
+  },
+
+  onGardenInput(e) {
+    this.setData({ ['gardenModal.form.' + e.currentTarget.dataset.k]: e.detail.value })
+  },
+
+  async saveGarden() {
+    const f = this.data.gardenModal.form
+    if (!f.name) { wx.showToast({ title: '请填园所名称', icon: 'none' }); return }
+    wx.showLoading({ title: '保存中', mask: true })
+    try {
+      const res = await api.call('createGarden', f)
+      wx.hideLoading()
+      this.setData({ 'gardenModal.show': false })
+      wx.showToast({ title: '已添加 ' + res.gardenKey, icon: 'success' })
+      this.loadGardens()
+    } catch (err) { wx.hideLoading(); api.toast(err) }
+  },
+
+  async toggleGardenOpen(e) {
+    const key = e.currentTarget.dataset.key
+    const open = !e.currentTarget.dataset.open
+    const self = this
+    wx.showModal({
+      title: open ? '启用园所' : '停用园所',
+      content: open ? '启用后该园所老师可重新登录下单' : '停用后该园所所有老师将无法登录',
+      confirmText: open ? '启用' : '停用',
+      success: async function (res) {
+        if (!res.confirm) return
+        try {
+          await api.call('updateGarden', { gardenKey: key, open: open })
+          wx.showToast({ title: '已更新', icon: 'success' })
+          self.loadGardens()
+        } catch (err) { api.toast(err) }
+      }
+    })
+  },
+
+  openAddPhone(e) {
+    this.setData({
+      'phoneModal.show': true,
+      'phoneModal.gardenKey': e.currentTarget.dataset.key,
+      'phoneModal.gardenName': e.currentTarget.dataset.name,
+      'phoneModal.form': { name: '', phone: '' }
+    })
+  },
+
+  closePhoneModal() {
+    this.setData({ 'phoneModal.show': false })
+  },
+
+  onPhoneInput(e) {
+    this.setData({ ['phoneModal.form.' + e.currentTarget.dataset.k]: e.detail.value })
+  },
+
+  async savePhone() {
+    const f = this.data.phoneModal.form
+    if (!/^1[3-9]\d{9}$/.test(f.phone)) { wx.showToast({ title: '请填正确手机号', icon: 'none' }); return }
+    wx.showLoading({ title: '保存中', mask: true })
+    try {
+      await api.call('addGardenPhone', {
+        gardenKey: this.data.phoneModal.gardenKey,
+        phone: f.phone,
+        name: f.name
+      })
+      wx.hideLoading()
+      this.setData({ 'phoneModal.show': false })
+      wx.showToast({ title: '已添加', icon: 'success' })
+      this.loadGardens()
+    } catch (err) { wx.hideLoading(); api.toast(err) }
+  },
+
+  async removePhone(e) {
+    const key = e.currentTarget.dataset.key
+    const phone = e.currentTarget.dataset.phone
+    const self = this
+    wx.showModal({
+      title: '删除白名单',
+      content: '确认删除 ' + phone + ' ？该手机号下次登录将无法直接进入园所',
+      confirmText: '删除',
+      success: async function (res) {
+        if (!res.confirm) return
+        try {
+          await api.call('removeGardenPhone', { gardenKey: key, phone: phone })
+          wx.showToast({ title: '已删除', icon: 'success' })
+          self.loadGardens()
+        } catch (err) { api.toast(err) }
+      }
     })
   },
 

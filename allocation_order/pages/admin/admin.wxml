@@ -19,6 +19,9 @@
   <view class="admin-tab {{tab === 'products' ? 'on' : ''}}" data-tab="products" bindtap="switchTab">
     商品
   </view>
+  <view class="admin-tab {{tab === 'gardens' ? 'on' : ''}}" data-tab="gardens" bindtap="switchTab">
+    白名单
+  </view>
 </view>
 
 <!-- 待审批 -->
@@ -182,6 +185,96 @@
   </view>
   <view class="empty" wx:if="{{!products.length}}">商品列表为空</view>
 </block>
+
+<!-- 白名单 -->
+<block wx:if="{{tab === 'gardens'}}">
+  <view class="prod-toolbar">
+    <view class="prod-tool-hint">共 {{gardens.length}} 家园所</view>
+    <view class="btn-add-prod" bindtap="openNewGarden">＋ 新增园所</view>
+  </view>
+  <view wx:for="{{gardens}}" wx:for-item="g" wx:key="gardenKey" class="garden-card {{g.open ? '' : 'garden-off'}}">
+    <view class="garden-head">
+      <view class="garden-head-l">
+        <text class="garden-key">{{g.gardenKey}}</text>
+        <text class="garden-name">{{g.name}}</text>
+        <text class="garden-status {{g.open ? 'open' : 'close'}}">{{g.open ? '在用' : '已停'}}</text>
+      </view>
+      <view class="garden-head-r" bindtap="toggleGardenOpen" data-key="{{g.gardenKey}}" data-open="{{g.open}}">
+        {{g.open ? '停用' : '启用'}}
+      </view>
+    </view>
+    <view class="garden-sub">
+      <text wx:if="{{g.contact}}">联系人 {{g.contact}}</text>
+      <text wx:if="{{g.route}}">· {{g.route}}</text>
+      <text wx:if="{{g.settle}}">· {{g.settle}}</text>
+    </view>
+
+    <!-- 手机号白名单 -->
+    <view class="phone-section">
+      <view class="phone-section-head">
+        <text>老师手机号白名单（{{g.phones.length}}）</text>
+        <text class="phone-add" bindtap="openAddPhone" data-key="{{g.gardenKey}}" data-name="{{g.name}}">＋ 添加</text>
+      </view>
+      <view wx:if="{{!g.phones.length}}" class="phone-empty">还没有手机号，添加后即可登录</view>
+      <view wx:for="{{g.phones}}" wx:for-item="p" wx:for-index="pi" wx:key="phone" class="phone-row">
+        <view class="phone-info">
+          <text class="phone-name">{{p.name || '未填'}}</text>
+          <text class="phone-num">{{p.phone}}</text>
+        </view>
+        <text class="phone-del" catchtap="removePhone" data-key="{{g.gardenKey}}" data-phone="{{p.phone}}">删除</text>
+      </view>
+    </view>
+  </view>
+  <view class="empty" wx:if="{{!gardens.length}}">暂无园所</view>
+</block>
+
+<!-- 新增园所弹窗 -->
+<view class="modal-mask" wx:if="{{gardenModal.show}}" bindtap="closeGardenModal"></view>
+<view class="modal" wx:if="{{gardenModal.show}}" catchtap="">
+  <view class="modal-title">新增园所</view>
+  <view class="modal-fields">
+    <view class="mf">
+      <text class="mf-l">园所名称 *</text>
+      <input class="mf-i" value="{{gardenModal.form.name}}" placeholder="如 阳光幼儿园" data-k="name" bindinput="onGardenInput" />
+    </view>
+    <view class="mf">
+      <text class="mf-l">联系人</text>
+      <input class="mf-i" value="{{gardenModal.form.contact}}" placeholder="园长李老师" data-k="contact" bindinput="onGardenInput" />
+    </view>
+    <view class="mf">
+      <text class="mf-l">配送线路</text>
+      <input class="mf-i" value="{{gardenModal.form.route}}" placeholder="如 A线·06:00" data-k="route" bindinput="onGardenInput" />
+    </view>
+    <view class="mf">
+      <text class="mf-l">结算方式</text>
+      <input class="mf-i" value="{{gardenModal.form.settle}}" placeholder="月结·按订单金额" data-k="settle" bindinput="onGardenInput" />
+    </view>
+  </view>
+  <view class="modal-actions">
+    <view class="modal-btn cancel" bindtap="closeGardenModal">取消</view>
+    <view class="modal-btn ok" bindtap="saveGarden">保存</view>
+  </view>
+</view>
+
+<!-- 加手机号弹窗 -->
+<view class="modal-mask" wx:if="{{phoneModal.show}}" bindtap="closePhoneModal"></view>
+<view class="modal" wx:if="{{phoneModal.show}}" catchtap="">
+  <view class="modal-title">添加手机号（{{phoneModal.gardenName}}）</view>
+  <view class="modal-fields">
+    <view class="mf">
+      <text class="mf-l">姓名</text>
+      <input class="mf-i" value="{{phoneModal.form.name}}" placeholder="园长 / 采购 / 保健" data-k="name" bindinput="onPhoneInput" />
+    </view>
+    <view class="mf">
+      <text class="mf-l">手机号 *</text>
+      <input class="mf-i" value="{{phoneModal.form.phone}}" type="number" maxlength="11" placeholder="11位手机号" data-k="phone" bindinput="onPhoneInput" />
+    </view>
+  </view>
+  <view class="modal-actions">
+    <view class="modal-btn cancel" bindtap="closePhoneModal">取消</view>
+    <view class="modal-btn ok" bindtap="savePhone">保存</view>
+  </view>
+</view>
 
 <!-- 新增 / 编辑弹窗 -->
 <view class="modal-mask" wx:if="{{modal.show}}" bindtap="closeModal"></view>
