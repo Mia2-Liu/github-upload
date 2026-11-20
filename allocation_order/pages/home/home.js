@@ -16,10 +16,10 @@ Page({
   onShow() {
     if (!app.requireLogin()) return
 
-    // 管理员进小程序直接到管理页，不展示园所下单界面
+    // 管理员直接进管理页，不绕园所首页
     const current = app.globalData.staff || {}
     if (current.role === 'admin') {
-      wx.redirectTo({ url: '/pages/admin/admin' })
+      wx.reLaunch({ url: '/pages/admin/admin' })
       return
     }
 

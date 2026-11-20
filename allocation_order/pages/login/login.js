@@ -7,9 +7,18 @@ function fmtPhone(p) {
   return s.slice(0, 3) + ' ' + s.slice(3, 7) + ' ' + s.slice(7)
 }
 
+function goByRole() {
+  const staff = app.globalData.staff || {}
+  if (staff.role === 'admin') {
+    wx.reLaunch({ url: '/pages/admin/admin' })
+  } else {
+    wx.switchTab({ url: '/pages/home/home' })
+  }
+}
+
 Page({
   data: {
-    stage: 'phone',       // phone | apply | pending
+    stage: 'phone',
     manual: false,
     phone: '',
     phoneText: '',
@@ -21,7 +30,7 @@ Page({
 
   onShow() {
     if (app.globalData.staff) {
-      wx.switchTab({ url: '/pages/home/home' })
+      goByRole()
     }
   },
 
@@ -57,7 +66,6 @@ Page({
     this.setData({ loading: true })
     wx.showLoading({ title: '登录中', mask: true })
 
-    // 强制清掉旧身份缓存，避免切换手机号时沿用旧 staff
     app.clearAuth()
 
     try {
@@ -68,7 +76,7 @@ Page({
         app.setAuth(data)
         wx.showToast({ title: '登录成功', icon: 'success' })
         this.setData({ loading: false })
-        wx.switchTab({ url: '/pages/home/home' })
+        goByRole()
         return
       }
 
@@ -125,7 +133,7 @@ Page({
         app.setAuth(data)
         this.setData({ loading: false })
         wx.showToast({ title: '绑定成功', icon: 'success' })
-        wx.switchTab({ url: '/pages/home/home' })
+        goByRole()
         return
       }
       this.setData({ stage: 'pending', pendingGarden: '', loading: false })

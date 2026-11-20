@@ -237,11 +237,13 @@ page { background: #F4F6F9; }
 .mf-l { font-size: 24rpx; color: #6B7280; display: block; margin-bottom: 8rpx; }
 .mf-i {
   background: #F9FAFB; border: 1rpx solid #E5E7EB;
-  border-radius: 10rpx; padding: 16rpx 20rpx; font-size: 28rpx;
+  border-radius: 10rpx; padding: 18rpx 20rpx; font-size: 28rpx;
+  line-height: 44rpx; height: 80rpx; box-sizing: border-box;
 }
 .mf-picker {
   background: #F9FAFB; border: 1rpx solid #E5E7EB;
-  border-radius: 10rpx; padding: 16rpx 20rpx; font-size: 28rpx; color: #111;
+  border-radius: 10rpx; padding: 18rpx 20rpx; font-size: 28rpx; color: #111;
+  line-height: 44rpx; height: 80rpx; box-sizing: border-box;
 }
 .modal-actions {
   display: flex; border-top: 1rpx solid #F3F4F6;
