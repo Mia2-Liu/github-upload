@@ -169,11 +169,11 @@
   font-weight: 600;
   font-family: Menlo, monospace;
 }
-.order-tag-待分拣 { background: #FFF3E0; color: #E65100; }
-.order-tag-已分拣 { background: #E3F2FD; color: #1565C0; }
-.order-tag-配送中 { background: #E8F5E9; color: #2E7D32; }
-.order-tag-已送达 { background: #ECEFF1; color: #455A64; }
-.order-tag-已取消 { background: #FFEBEE; color: #C62828; }
+.order-tag-pending { background: #FFF3E0; color: #E65100; }
+.order-tag-sorted { background: #E3F2FD; color: #1565C0; }
+.order-tag-delivering { background: #E8F5E9; color: #2E7D32; }
+.order-tag-delivered { background: #ECEFF1; color: #455A64; }
+.order-tag-cancelled { background: #FFEBEE; color: #C62828; }
 
 .order-meta {
   display: flex;

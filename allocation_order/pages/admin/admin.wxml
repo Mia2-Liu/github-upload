@@ -61,7 +61,7 @@
     <view class="order-card" wx:for="{{g.orders}}" wx:for-item="o" wx:key="orderId">
       <view class="order-top">
         <view class="order-no">{{o.orderNo}}</view>
-        <text class="tag order-tag-{{o.status}}">{{o.status}}</text>
+        <text class="tag order-tag-{{o.statusKey}}">{{o.status}}</text>
       </view>
       <view class="order-meta">
         <text>下单人：{{o.createdBy || '—'}}</text>

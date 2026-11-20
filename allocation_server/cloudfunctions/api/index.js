@@ -583,6 +583,8 @@ async function reviewBind(openid, event) {
  */
 const STATUS_FLOW = ['待分拣', '已分拣', '配送中', '已送达']
 const TERMINAL_STATUSES = ['已送达', '已取消']
+// 前端 WXSS 不支持中文类名，返回稳定英文 key 供样式使用
+const STATUS_KEY = { '待分拣': 'pending', '已分拣': 'sorted', '配送中': 'delivering', '已送达': 'delivered', '已取消': 'cancelled' }
 
 function nextStatusOf(from) {
   const i = STATUS_FLOW.indexOf(from)
@@ -627,6 +629,7 @@ async function listOrders(openid, event) {
       gardenKey: o.gardenKey,
       gardenName: o.gardenName,
       status: o.status,
+      statusKey: STATUS_KEY[o.status] || 'pending',
       amount: o.amount,
       itemCount: o.itemCount,
       remark: o.remark || '',

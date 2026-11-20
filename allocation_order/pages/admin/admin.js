@@ -116,6 +116,7 @@ Page({
             orderId: o.orderId,
             orderNo: o.orderNo,
             status: o.status,
+            statusKey: o.statusKey || 'pending',
             nextStatus: o.nextStatus,
             canCancel: o.canCancel,
             canRestore: o.canRestore,
