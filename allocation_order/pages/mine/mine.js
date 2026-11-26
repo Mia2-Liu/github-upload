@@ -31,7 +31,7 @@ Page({
       content: '退出后需要重新授权手机号',
       success: function (res) {
         if (!res.confirm) return
-        app.clearAuth()
+        app.signOut()
         wx.reLaunch({ url: '/pages/login/login' })
       }
     })

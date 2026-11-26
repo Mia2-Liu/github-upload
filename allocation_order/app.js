@@ -33,6 +33,12 @@ App({
     wx.removeStorageSync('auth')
   },
 
+  // 主动退出：除了清登录态，还标记下次进登录页不做免输入登录，方便换账号
+  signOut() {
+    this.clearAuth()
+    wx.setStorageSync('needManualLogin', true)
+  },
+
   // 未登录时统一跳登录页，返回 false 让调用方中断
   requireLogin() {
     if (this.globalData.staff) return true

@@ -5,21 +5,18 @@
     <view class="login-desc">幼儿园食材下单 · 每天 07:30 前送达</view>
   </view>
 
-  <block wx:if="{{stage === 'phone'}}">
-    <button class="login-wx" open-type="getPhoneNumber" bindgetphonenumber="onGetPhone" loading="{{loading}}">
-      微信授权手机号登录
+  <view wx:if="{{booting}}" class="login-booting">正在登录…</view>
+
+  <block wx:elif="{{stage === 'phone'}}">
+    <input class="login-input login-input-first" type="number" maxlength="11" placeholder="请输入 11 位手机号"
+           value="{{phone}}" bindinput="onPhoneInput" />
+    <view class="login-wx plain" bindtap="onManualLogin">登录</view>
+
+    <button class="login-wx ghost" open-type="getPhoneNumber" bindgetphonenumber="onGetPhone" loading="{{loading}}">
+      微信授权手机号（需企业主体）
     </button>
 
-    <view class="login-or"><text>或</text></view>
-
-    <view wx:if="{{!manual}}" class="login-alt" bindtap="toggleManual">用手机号登录</view>
-    <block wx:else>
-      <input class="login-input" type="number" maxlength="11" placeholder="请输入 11 位手机号"
-             value="{{phone}}" bindinput="onPhoneInput" />
-      <view class="login-wx plain" bindtap="onManualLogin">登录</view>
-    </block>
-
-    <view class="login-mid">手机号在园所白名单内，授权后直接进入本园</view>
+    <view class="login-mid">手机号在园所白名单内即可进入；登录一次后自动记住，下次免输入</view>
   </block>
 
   <block wx:elif="{{stage === 'apply'}}">

@@ -30,11 +30,35 @@ async function resolvePhone(event) {
  * 入参 { phone } 或 { phoneCode }
  * 返回 { authenticated, staff, garden } 或 { authenticated:false, reason }
  */
+/**
+ * 统一的登录成功返回体。管理端 / 教师端都走这里，保证字段一致。
+ */
+async function authPayload(staff) {
+  const garden = staff.gardenKey ? await c.getGarden(staff.gardenKey) : null
+  if (staff.role === 'teacher' && (!garden || !garden.open)) {
+    throw new c.ApiError(403, '所属园所已暂停使用，请联系业务员')
+  }
+  return c.ok({
+    authenticated: true,
+    staff: c.publicStaff(staff),
+    garden: c.publicGarden(garden),
+    serverDate: c.cstDate(0),
+    cutoffTime: '16:00'
+  })
+}
+
 async function login(openid, event) {
   if (!openid) throw new c.ApiError(401, '缺少微信身份，请在小程序内登录')
 
   const phone = await resolvePhone(event)
-  if (!phone) return c.ok({ authenticated: false, reason: 'NEED_PHONE', hint: '请授权手机号后登录' })
+
+  // 免输入登录：openid 已绑定过 staff 就直接进入。
+  // 个人主体小程序无法使用 getPhoneNumber，靠这条让回访用户不用每次手输手机号。
+  if (!phone) {
+    const bound = await c.getStaff(openid)
+    if (bound && bound.active) return authPayload(bound)
+    return c.ok({ authenticated: false, reason: 'NEED_PHONE', hint: '请输入手机号登录' })
+  }
   if (!c.isValidPhone(phone)) throw new c.ApiError(400, '手机号格式不正确')
 
   let staff = await c.getStaff(openid)
@@ -110,18 +134,7 @@ async function login(openid, event) {
     })
   }
 
-  const garden = staff.gardenKey ? await c.getGarden(staff.gardenKey) : null
-  if (staff.role === 'teacher' && (!garden || !garden.open)) {
-    throw new c.ApiError(403, '所属园所已暂停使用，请联系业务员')
-  }
-
-  return c.ok({
-    authenticated: true,
-    staff: c.publicStaff(staff),
-    garden: c.publicGarden(garden),
-    serverDate: c.cstDate(0),
-    cutoffTime: '16:00'
-  })
+  return authPayload(staff)
 }
 
 /**

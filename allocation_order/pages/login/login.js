@@ -18,8 +18,9 @@ function goByRole() {
 
 Page({
   data: {
+    booting: true,
     stage: 'phone',
-    manual: false,
+    manual: true,
     phone: '',
     phoneText: '',
     gardenKey: '',
@@ -28,25 +29,54 @@ Page({
     loading: false
   },
 
+  onLoad() {
+    const last = wx.getStorageSync('lastPhone') || ''
+    this.setData({ phone: last })
+
+    // 主动退出后跳过免输入登录，否则会立刻被自动登回去，无法换号
+    if (wx.getStorageSync('needManualLogin')) {
+      wx.removeStorageSync('needManualLogin')
+      this.setData({ booting: false })
+      return
+    }
+    this.silentLogin()
+  },
+
+  // 免输入登录：openid 已绑定时直接进对应角色页面
+  async silentLogin() {
+    try {
+      const data = await api.call('login', {})
+      if (data && data.authenticated) {
+        app.setAuth(data)
+        goByRole()
+        return
+      }
+    } catch (e) {
+      // 静默登录失败不打扰用户，落到手动输入
+    }
+    this.setData({ booting: false })
+  },
+
   onShow() {
     if (app.globalData.staff) {
       goByRole()
     }
   },
 
-  // 微信手机号授权（需要非个人主体小程序 + 云调用权限）
+  // 微信手机号授权（仅企业/组织主体且已开通云调用可用）
   onGetPhone(e) {
     const code = e.detail && e.detail.code
     if (!code) {
-      this.setData({ manual: true })
-      wx.showToast({ title: '授权未完成，请手动输入手机号', icon: 'none' })
+      this.setData({ booting: false })
+      wx.showModal({
+        title: '无法获取手机号',
+        content: '当前小程序为个人主体，微信手机号授权不可用。请直接输入手机号登录，一次输入后会记住。',
+        showCancel: false,
+        confirmText: '手动输入'
+      })
       return
     }
     this.doLogin({ phoneCode: code })
-  },
-
-  toggleManual() {
-    this.setData({ manual: !this.data.manual })
   },
 
   onPhoneInput(e) {
@@ -74,8 +104,10 @@ Page({
 
       if (data.authenticated) {
         app.setAuth(data)
+        const used = (data.staff && data.staff.phone) || payload.phone || this.data.phone
+        if (used) wx.setStorageSync('lastPhone', used)
         wx.showToast({ title: '登录成功', icon: 'success' })
-        this.setData({ loading: false })
+        this.setData({ loading: false, booting: false })
         goByRole()
         return
       }
@@ -87,19 +119,21 @@ Page({
           phone: phone,
           phoneText: fmtPhone(phone),
           pendingGarden: (data.request && data.request.gardenName) || '',
-          loading: false
+          loading: false,
+          booting: false
         })
       } else {
         this.setData({
           stage: 'apply',
           phone: phone,
           phoneText: fmtPhone(phone),
-          loading: false
+          loading: false,
+          booting: false
         })
       }
     } catch (err) {
       wx.hideLoading()
-      this.setData({ loading: false })
+      this.setData({ loading: false, booting: false })
       api.toast(err)
     }
   },
