@@ -63,22 +63,6 @@ Page({
     }
   },
 
-  // 微信手机号授权（仅企业/组织主体且已开通云调用可用）
-  onGetPhone(e) {
-    const code = e.detail && e.detail.code
-    if (!code) {
-      this.setData({ booting: false })
-      wx.showModal({
-        title: '无法获取手机号',
-        content: '当前小程序为个人主体，微信手机号授权不可用。请直接输入手机号登录，一次输入后会记住。',
-        showCancel: false,
-        confirmText: '手动输入'
-      })
-      return
-    }
-    this.doLogin({ phoneCode: code })
-  },
-
   onPhoneInput(e) {
     this.setData({ phone: String(e.detail.value || '').replace(/\D/g, '').slice(0, 11) })
   },

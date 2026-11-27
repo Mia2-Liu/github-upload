@@ -12,10 +12,6 @@
            value="{{phone}}" bindinput="onPhoneInput" />
     <view class="login-wx plain" bindtap="onManualLogin">登录</view>
 
-    <button class="login-wx ghost" open-type="getPhoneNumber" bindgetphonenumber="onGetPhone" loading="{{loading}}">
-      微信授权手机号（需企业主体）
-    </button>
-
     <view class="login-mid">手机号在园所白名单内即可进入；登录一次后自动记住，下次免输入</view>
   </block>
 

@@ -78,14 +78,6 @@
 }
 .login-input-first { margin-top: 84rpx; }
 
-.login-wx.ghost {
-  margin-top: 24rpx;
-  background: #fff;
-  color: #07C160;
-  border: 1rpx solid #07C160;
-  font-size: 28rpx;
-}
-
 .login-booting {
   margin-top: 120rpx;
   text-align: center;
